@@ -1,0 +1,82 @@
+{
+  "name": "storybook-live-code-sandbox",
+  "version": "0.1.0",
+  "description": "Preview-iframe Storybook live composition sandbox built with CodeMirror and react-live.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tsviser/storybook-live-code-sandbox.git"
+  },
+  "homepage": "https://github.com/tsviser/storybook-live-code-sandbox#readme",
+  "bugs": {
+    "url": "https://github.com/tsviser/storybook-live-code-sandbox/issues"
+  },
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "style": "./dist/styles.css",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./preview": {
+      "types": "./dist/preview.d.ts",
+      "import": "./dist/preview.js"
+    },
+    "./package.json": "./package.json",
+    "./styles.css": "./dist/styles.css"
+  },
+  "sideEffects": [
+    "**/*.css"
+  ],
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "vite build && tsc -p tsconfig.json",
+    "test": "vitest run",
+    "release:check": "npm test && npm run build && npm pack --dry-run",
+    "prepublishOnly": "npm test && npm run build"
+  },
+  "keywords": [
+    "storybook",
+    "addon",
+    "live-code",
+    "sandbox",
+    "codemirror"
+  ],
+  "license": "MIT",
+  "peerDependencies": {
+    "react": ">=18",
+    "react-dom": ">=18",
+    "storybook": ">=10"
+  },
+  "dependencies": {
+    "@codemirror/commands": "^6.10.0",
+    "@codemirror/lang-javascript": "^6.2.5",
+    "@codemirror/state": "^6.7.1",
+    "@codemirror/view": "^6.43.7",
+    "react-live": "^4.1.8",
+    "storybook-live-code": "^0.3.3"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.3",
+    "@types/react": "latest",
+    "@types/react-dom": "latest",
+    "@vitejs/plugin-react": "latest",
+    "jsdom": "^29.1.1",
+    "react": "latest",
+    "react-dom": "latest",
+    "typescript": "latest",
+    "vite": "latest",
+    "vitest": "^4.1.10"
+  }
+}

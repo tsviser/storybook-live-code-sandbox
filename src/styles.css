@@ -1,0 +1,147 @@
+.sb-live-code-sandbox__launcher {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 2147483000;
+  border: 1px solid rgba(27, 31, 36, 0.16);
+  border-radius: 6px;
+  background: #111827;
+  color: #ffffff;
+  font: 600 13px/1.2 system-ui, sans-serif;
+  padding: 9px 12px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.22);
+}
+
+.sb-live-code-sandbox {
+  position: fixed;
+  z-index: 2147483001;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  background: #ffffff;
+  color: #111827;
+  border: 1px solid rgba(15, 23, 42, 0.14);
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.26);
+  font: 13px/1.4 system-ui, sans-serif;
+}
+
+.sb-live-code-sandbox--drawer {
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: min(720px, 96vw);
+}
+
+.sb-live-code-sandbox--fullscreen {
+  inset: 24px;
+}
+
+.sb-live-code-sandbox__toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.12);
+}
+
+.sb-live-code-sandbox__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.sb-live-code-sandbox button,
+.sb-live-code-sandbox input {
+  font: inherit;
+}
+
+.sb-live-code-sandbox__actions button,
+.sb-live-code-sandbox__registry button {
+  border: 1px solid rgba(15, 23, 42, 0.14);
+  border-radius: 6px;
+  background: #f8fafc;
+  color: #111827;
+  padding: 7px 9px;
+}
+
+.sb-live-code-sandbox__body {
+  display: grid;
+  grid-template-columns: minmax(180px, 240px) minmax(0, 1fr);
+  min-height: 0;
+}
+
+.sb-live-code-sandbox__registry {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 10px;
+  min-height: 0;
+  padding: 12px;
+  border-right: 1px solid rgba(15, 23, 42, 0.12);
+}
+
+.sb-live-code-sandbox__registry input {
+  width: 100%;
+  border: 1px solid rgba(15, 23, 42, 0.16);
+  border-radius: 6px;
+  padding: 8px 9px;
+}
+
+.sb-live-code-sandbox__registryList {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  overflow: auto;
+}
+
+.sb-live-code-sandbox__registry button {
+  display: grid;
+  gap: 3px;
+  text-align: left;
+}
+
+.sb-live-code-sandbox__registry small {
+  color: #475569;
+}
+
+.sb-live-code-sandbox__workspace {
+  display: grid;
+  grid-template-rows: minmax(220px, 1fr) minmax(160px, 0.8fr);
+  min-width: 0;
+  min-height: 0;
+}
+
+.sb-live-code-sandbox__editorHost {
+  min-height: 0;
+  overflow: auto;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.12);
+}
+
+.sb-live-code-sandbox__preview {
+  min-height: 0;
+  overflow: auto;
+  padding: 16px;
+  background: #f8fafc;
+}
+
+.sb-live-code-sandbox__diagnostic {
+  margin: 12px 0 0;
+  color: #b42318;
+}
+
+@media (max-width: 720px) {
+  .sb-live-code-sandbox--fullscreen,
+  .sb-live-code-sandbox--drawer {
+    inset: 0;
+    width: auto;
+  }
+
+  .sb-live-code-sandbox__body {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto minmax(0, 1fr);
+  }
+
+  .sb-live-code-sandbox__registry {
+    border-right: 0;
+    border-bottom: 1px solid rgba(15, 23, 42, 0.12);
+  }
+}
