@@ -57,6 +57,7 @@
   "scripts": {
     "build": "vite build && tsc -p tsconfig.json",
     "test": "vitest run",
+    "prepare": "npm run build",
     "release:check": "npm test && npm run build && npm pack --dry-run",
     "prepublishOnly": "npm test && npm run build"
   },
