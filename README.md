@@ -1,12 +1,8 @@
 # storybook-live-code-sandbox
 
-`storybook-live-code-sandbox` adds a persistent composition workspace inside the Storybook preview iframe. It is separate from `storybook-live-code` and depends on it as a package peer for the live-code ecosystem, while owning the sandbox-specific editor, persistence, registry, and preview workspace.
+`storybook-live-code-sandbox` provides one persistent composition workspace for Storybook. Stories send their displayed source to a dedicated sandbox story; individual previews do not mount drawers, launchers, or sandbox providers.
 
-The sandbox renders in the preview iframe, not the manager iframe. This is required because Storybook manager and preview frames can only exchange serializable data; live React component references and providers must stay in the preview tree.
-
-## Relationship To `storybook-live-code`
-
-`storybook-live-code@0.3.3` currently exports complete block components and package CSS, not lower-level CodeMirror editor/session primitives. This package keeps `storybook-live-code` as a real dependency but owns the sandbox editor integration instead of importing private internals. If `storybook-live-code` later exports reusable editor primitives, the sandbox should consume those public APIs.
+The package is design-system agnostic. It ships core behavior, a default artifact, and a Crossroads UI adapter contract without depending on Crossroads UI.
 
 ## Install
 
@@ -14,63 +10,67 @@ The sandbox renders in the preview iframe, not the manager iframe. This is requi
 npm install storybook-live-code-sandbox storybook-live-code
 ```
 
-For local development before publishing:
+## Dedicated Sandbox Story
 
-```json
-{
-  "devDependencies": {
-    "storybook-live-code-sandbox": "file:../storybook-live-code-sandbox"
-  }
-}
-```
-
-## Storybook Usage
-
-In `.storybook/preview.tsx`:
+Create one full-screen Storybook story and keep live component references in the preview runtime:
 
 ```tsx
-import type { Preview } from "@storybook/react-vite";
-import { withLiveCodeSandbox } from "storybook-live-code-sandbox/preview";
+import type { Meta, StoryObj } from "@storybook/react-vite";
+import { LiveCodeSandboxProvider } from "storybook-live-code-sandbox";
+import { addons } from "storybook/preview-api";
 import "storybook-live-code-sandbox/styles.css";
-import { liveCodeScope } from "../src/components/storybookLiveCodeScope";
-import { liveCodeRegistry } from "../src/components/storybookLiveCodeRegistry";
+import { liveCodeRegistry } from "../src/liveCodeRegistry";
+import { liveCodeScope } from "../src/liveCodeScope";
 
-const preview: Preview = {
-  decorators: [
-    withLiveCodeSandbox({
-      scope: liveCodeScope,
-      registry: liveCodeRegistry,
-      storageKey: "crossroads-ui-live-code-sandbox",
-    }),
-  ],
-};
+function Workspace() {
+  return (
+    <LiveCodeSandboxProvider
+      channel={addons.getChannel()}
+      checkpointInterval={5}
+      historyLimit={8}
+      registry={liveCodeRegistry}
+      scope={liveCodeScope}
+      storageKey="my-library-live-code-sandbox"
+    />
+  );
+}
 
-export default preview;
+const meta = {
+  title: "Tools/Live Sandbox",
+  parameters: { layout: "fullscreen" },
+  render: () => <Workspace />
+} satisfies Meta;
+
+export default meta;
+export const Sandbox: StoryObj<typeof meta> = {};
 ```
 
-If your design system provider is also mounted in Storybook preview decorators, keep the sandbox inside that preview-side provider tree so composed components inherit the same theme, direction, CSS variables, portal roots, and context as the active story.
+## Add Story Source
 
-## Public Configuration API
-
-### `scope`
-
-`Record<string, unknown>`
-
-The runtime names available to `react-live` when evaluating the composition. This should be a broad name-to-component map, for example:
+Use the exact source string already resolved by Storybook's Docs `Canvas` and pass it unchanged:
 
 ```ts
-export const liveCodeScope = {
-  Button,
-  Stack,
-  Surface,
-};
+import { addStoryToSandboxStorage } from "storybook-live-code-sandbox/storage";
+
+addStoryToSandboxStorage({
+  channel: addons.getChannel(),
+  code: sourceProps.code,
+  storageKey: "my-library-live-code-sandbox",
+  storyName: story.name
+});
 ```
 
-### `registry`
+The helper inserts at the saved cursor, creates an immediate `Added <story>` checkpoint, and broadcasts a storage-key-scoped synchronization event. It does not navigate to or open the sandbox. Empty source or unavailable storage throws without changing the workspace.
 
-`LiveCodeRegistryItem[]`
+Manager links can navigate to the shared host in response to the exported event:
 
-The selectable component list shown in the sandbox. Consumers own this data. The sandbox does not know about any specific design system.
+```ts
+import { LIVE_CODE_SANDBOX_OPEN_EVENT } from "storybook-live-code-sandbox/events";
+```
+
+Preview-side links can request that navigation with `requestLiveCodeSandboxOpen(channel)`.
+
+## Registry
 
 ```ts
 export type LiveCodeRegistryItem = {
@@ -78,59 +78,59 @@ export type LiveCodeRegistryItem = {
   importPath?: string;
   description?: string;
   category?: string;
-  examples: Array<{
-    name: string;
-    code: string;
-    description?: string;
-  }>;
+  disabledReason?: string;
+  sandboxVisible?: boolean;
+  examples: Array<{ name: string; code: string; description?: string }>;
   props?: Array<{
     name: string;
     type?: string;
     required?: boolean;
     defaultValue?: string;
     description?: string;
+    importance?: "high" | "normal" | "advanced";
   }>;
   metadata?: Record<string, unknown>;
 };
 ```
 
-The first example is used for the current insert action. Future autocomplete, linting, export, and AI composition features can use the same registry metadata.
+Only entries with `sandboxVisible: true` appear. Categories create single-select filters; categories with fewer than three visible components are combined under `Other`. Props are ordered required, high, normal, advanced, then alphabetically.
 
-### `storageKey`
+## Configuration
 
-`string`
+- `scope`: names available to `react-live` while evaluating compositions.
+- `registry`: visual components, insertion examples, availability, and prop metadata.
+- `storageKey`: namespace for persisted state and synchronization events.
+- `initialCode`: optional initial content; the default is empty.
+- `checkpointInterval`: component/prop insertions per automatic checkpoint. Default `5`; `0` disables interval checkpoints.
+- `historyLimit`: retained checkpoints. Default `8`; constrained to `1-50`.
+- `channel`: optional Storybook-compatible channel for cross-frame synchronization.
+- `ui`: optional `LiveCodeSandboxUIAdapter`.
 
-The `localStorage` key for the workspace. The sandbox persists:
+Typing checkpoints on blur, paste checkpoints immediately, and story-source transfers checkpoint immediately. Reset remains in the dedicated view and clears code, history, undo/redo state, insertion progress, selection, and pending typing.
 
-- current buffer
-- cursor position
-- open state
-- drawer/fullscreen layout
-- last successful code
+## UI Artifacts
 
-### `initialCode`
+The default artifact uses the package's accessible fallback controls:
 
-`string | undefined`
+```ts
+import { defaultLiveCodeSandboxArtifact } from "storybook-live-code-sandbox/artifacts/default";
+```
 
-Optional starting composition used when no saved state exists or when the user resets the workspace.
+Design systems can supply render functions for buttons, chips, fields, tabs, dialogs, notifications, and the root surface. The Crossroads export applies the artifact identity while receiving components through an adapter, avoiding a package dependency cycle:
 
-## Included Behavior
+```ts
+import { createCrossroadsUIArtifact } from "storybook-live-code-sandbox/artifacts/crossroads-ui";
 
-- One CodeMirror editor instance is created and reused across drawer and fullscreen modes.
-- Component snippets insert at the active cursor or replace the active selection.
-- `Tab` indents inside the editor.
-- Invalid/incomplete JSX shows diagnostics and keeps rendering the last successful composition.
-- The saved workspace restores after reloads and story navigation.
+export const artifact = createCrossroadsUIArtifact(crossroadsAdapter);
+```
 
-## Out Of Scope For This Package Version
+## Persistence
 
-- Prop-aware autocomplete and linting.
-- Share links.
-- AI composition.
-- Exporting generated `.stories.tsx` files.
+Storage version 3 persists code, cursor, last successful preview code, checkpoints, checkpoint interval, history retention, and insertion progress. Existing version 1 and version 2 data is migrated when read. Browser storage events and scoped channel events keep Docs frames, tabs, and the dedicated preview synchronized.
 
 ## Release Process
 
 1. Run `npm run release:check`.
-2. Install the resulting package in a consuming Storybook and manually test the editor, insertion, preview, persistence, drawer, and fullscreen workflows.
-3. Publish to npm only after the manual test is explicitly approved.
+2. Install the generated tarball in a consuming Storybook.
+3. Complete manual desktop and mobile testing.
+4. Publish only after explicit approval. Do not combine validation with versioning or publication.

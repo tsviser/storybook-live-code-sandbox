@@ -24,6 +24,22 @@
       "types": "./dist/preview.d.ts",
       "import": "./dist/preview.js"
     },
+    "./events": {
+      "types": "./dist/events.d.ts",
+      "import": "./dist/events.js"
+    },
+    "./storage": {
+      "types": "./dist/storage.d.ts",
+      "import": "./dist/storage.js"
+    },
+    "./artifacts/default": {
+      "types": "./dist/artifacts/default.d.ts",
+      "import": "./dist/artifacts/default.js"
+    },
+    "./artifacts/crossroads-ui": {
+      "types": "./dist/artifacts/crossroads-ui.d.ts",
+      "import": "./dist/artifacts/crossroads-ui.js"
+    },
     "./package.json": "./package.json",
     "./styles.css": "./dist/styles.css"
   },

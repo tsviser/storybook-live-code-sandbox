@@ -8,6 +8,10 @@ export default defineConfig({
       entry: {
         index: "src/index.ts",
         preview: "src/preview.tsx",
+        events: "src/events.ts",
+        storage: "src/storage.ts",
+        "artifacts/default": "src/artifacts/default.ts",
+        "artifacts/crossroads-ui": "src/artifacts/crossroads-ui.ts",
       },
       formats: ["es"],
     },
