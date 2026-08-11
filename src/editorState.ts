@@ -247,11 +247,9 @@ export const safeParseStorage = (
 export const validateJsx = (code: string): string | null => {
   const trimmed = code.trim();
   if (!trimmed) return null;
-  const openAngles = (trimmed.match(/</g) ?? []).length;
-  const closeAngles = (trimmed.match(/>/g) ?? []).length;
-  return openAngles === closeAngles
-    ? null
-    : "JSX appears incomplete: angle brackets are unbalanced.";
+  return treeHasErrors(trimmed)
+    ? "JSX appears incomplete: angle brackets are unbalanced."
+    : null;
 };
 
 export const getPreviewCode = (code: string): string => {

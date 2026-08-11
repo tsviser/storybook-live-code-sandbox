@@ -208,4 +208,21 @@ describe("preview source", () => {
     expect(validateJsx("")).toBeNull();
     expect(validateJsx("<Button")).toMatch("unbalanced");
   });
+
+  it("does not treat JavaScript arrow functions as unbalanced JSX", () => {
+    expect(validateJsx('<SplitButton onAction={() => {}} />')).toBeNull();
+  });
+
+  it("does not count angle characters inside JSX expressions", () => {
+    expect(validateJsx('<TextField value={items.length > 0 ? items[0] : ""} />')).toBeNull();
+  });
+
+  it("accepts compound JSX components with nested options", () => {
+    expect(validateJsx(`
+      <RadioGroup.Root name="notification-frequency" onChange={() => {}} value="option2">
+        <RadioGroup.Option label="Instant" value="option1" />
+        <RadioGroup.Option label="Daily digest" value="option2" />
+      </RadioGroup.Root>
+    `)).toBeNull();
+  });
 });

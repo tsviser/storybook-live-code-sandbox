@@ -7,7 +7,7 @@ The package is design-system agnostic. It ships core behavior, a default artifac
 ## Install
 
 ```sh
-npm install storybook-live-code-sandbox storybook-live-code
+npm install storybook-live-code-sandbox
 ```
 
 ## Dedicated Sandbox Story
