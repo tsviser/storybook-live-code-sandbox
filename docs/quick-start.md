@@ -107,3 +107,21 @@ The helper inserts the code at the saved sandbox cursor, creates an immediate hi
 ## Runnable Example
 
 The full basic example lives in [examples/basic-storybook](../examples/basic-storybook). It uses local demo components so you can see the sandbox working without Crossroads UI or any design-system dependency.
+
+## Screenshots
+
+The example opens with one shared `Tools/Live Sandbox` workspace and a component sidebar populated from the registry.
+
+![Live Sandbox example workspace](../examples/images/Sandbox_sampleApp-Screenshot.jpeg)
+
+Selecting a component inserts the snippet into the editor and switches the sidebar to relevant prop suggestions.
+
+![Component inserted in the sandbox](../examples/images/Sandbox_sampleApp-Screenshot-component.jpeg)
+
+After adding several snippets, the editor and preview stay synchronized while history tracks composition checkpoints.
+
+![Sandbox with composed components and history](../examples/images/Sandbox_sampleApp-Screenshot--Components.jpeg)
+
+The settings dialog lets users tune insertion checkpoint frequency and retained history.
+
+![Sandbox history settings dialog](../examples/images/Sandbox_sampleApp-Screenshot--Settings.jpeg)

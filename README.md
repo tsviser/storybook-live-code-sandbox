@@ -22,6 +22,8 @@ npm run storybook
 
 Open the `Tools/Live Sandbox` story, insert components from the sidebar, paste JSX, or copy examples from the demo stories. See the [quick-start guide](https://github.com/tsviser/storybook-live-code-sandbox/blob/main/docs/quick-start.md) and [basic Storybook example](https://github.com/tsviser/storybook-live-code-sandbox/tree/main/examples/basic-storybook) in GitHub.
 
+![Basic Storybook example sandbox](https://raw.githubusercontent.com/tsviser/storybook-live-code-sandbox/main/examples/images/Sandbox_sampleApp-Screenshot.jpeg)
+
 ## Dedicated Sandbox Story
 
 Create one full-screen Storybook story and keep live component references in the preview runtime:

@@ -11,6 +11,8 @@ npm run storybook
 
 Then open `Tools/Live Sandbox`.
 
+![Basic Storybook sandbox workspace](../images/Sandbox_sampleApp-Screenshot.jpeg)
+
 ## What It Demonstrates
 
 - A dedicated sandbox story.
@@ -18,6 +20,14 @@ Then open `Tools/Live Sandbox`.
 - A runtime scope for `react-live`.
 - Prop suggestions from registry metadata.
 - Story examples that can send source into the shared sandbox storage.
+
+## Screenshots
+
+![Component inserted with prop suggestions](../images/Sandbox_sampleApp-Screenshot-component.jpeg)
+
+![Composed sandbox preview with history](../images/Sandbox_sampleApp-Screenshot--Components.jpeg)
+
+![History settings dialog](../images/Sandbox_sampleApp-Screenshot--Settings.jpeg)
 
 ## Build
 
