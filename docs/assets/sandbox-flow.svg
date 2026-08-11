@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="920" height="360" viewBox="0 0 920 360" role="img" aria-labelledby="title desc">
+  <title id="title">Sandbox integration flow</title>
+  <desc id="desc">Storybook stories send source into one persistent sandbox workspace backed by a registry and runtime scope.</desc>
+  <defs>
+    <marker id="arrow" markerHeight="10" markerWidth="10" orient="auto" refX="8" refY="3">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#725d7c" />
+    </marker>
+  </defs>
+  <rect width="920" height="360" fill="#faf9fb" rx="18" />
+  <g font-family="Inter, Arial, sans-serif">
+    <rect x="48" y="62" width="210" height="116" fill="#fff" stroke="#d8cedd" stroke-width="2" rx="12" />
+    <text x="76" y="102" fill="#352d38" font-size="22" font-weight="700">Storybook Story</text>
+    <text x="76" y="134" fill="#725d7c" font-size="15">Displayed source</text>
+    <text x="76" y="158" fill="#725d7c" font-size="15">Add to sandbox action</text>
+
+    <rect x="356" y="62" width="210" height="116" fill="#fff" stroke="#d8cedd" stroke-width="2" rx="12" />
+    <text x="386" y="102" fill="#352d38" font-size="22" font-weight="700">Storage + Events</text>
+    <text x="386" y="134" fill="#725d7c" font-size="15">Saved cursor</text>
+    <text x="386" y="158" fill="#725d7c" font-size="15">History checkpoint</text>
+
+    <rect x="664" y="62" width="210" height="116" fill="#fff" stroke="#d8cedd" stroke-width="2" rx="12" />
+    <text x="694" y="102" fill="#352d38" font-size="22" font-weight="700">Live Sandbox</text>
+    <text x="694" y="134" fill="#725d7c" font-size="15">Editor</text>
+    <text x="694" y="158" fill="#725d7c" font-size="15">Preview canvas</text>
+
+    <line x1="268" y1="120" x2="344" y2="120" stroke="#725d7c" stroke-width="3" marker-end="url(#arrow)" />
+    <line x1="576" y1="120" x2="652" y2="120" stroke="#725d7c" stroke-width="3" marker-end="url(#arrow)" />
+
+    <rect x="202" y="240" width="232" height="64" fill="#f2eef5" stroke="#d8cedd" rx="12" />
+    <text x="226" y="279" fill="#352d38" font-size="19" font-weight="700">Registry</text>
+    <text x="316" y="279" fill="#725d7c" font-size="15">visible components + props</text>
+
+    <rect x="486" y="240" width="232" height="64" fill="#f2eef5" stroke="#d8cedd" rx="12" />
+    <text x="510" y="279" fill="#352d38" font-size="19" font-weight="700">Scope</text>
+    <text x="578" y="279" fill="#725d7c" font-size="15">runtime React values</text>
+
+    <line x1="318" y1="232" x2="440" y2="184" stroke="#9c8aa6" stroke-width="2" marker-end="url(#arrow)" />
+    <line x1="602" y1="232" x2="680" y2="184" stroke="#9c8aa6" stroke-width="2" marker-end="url(#arrow)" />
+  </g>
+</svg>

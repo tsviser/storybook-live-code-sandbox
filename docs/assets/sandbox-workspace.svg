@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="920" height="420" viewBox="0 0 920 420" role="img" aria-labelledby="title desc">
+  <title id="title">Sandbox workspace layout</title>
+  <desc id="desc">The sandbox workspace contains a component sidebar, code editor, live preview, and persistent history chips.</desc>
+  <rect width="920" height="420" fill="#faf9fb" rx="18" />
+  <g font-family="Inter, Arial, sans-serif">
+    <rect x="42" y="42" width="836" height="336" fill="#fff" stroke="#d8cedd" stroke-width="2" rx="14" />
+    <rect x="42" y="42" width="836" height="58" fill="#f5f1f7" rx="14" />
+    <text x="72" y="78" fill="#352d38" font-size="21" font-weight="700">Live Sandbox</text>
+    <circle cx="760" cy="70" r="12" fill="#8f7a99" />
+    <circle cx="802" cy="70" r="12" fill="#8f7a99" />
+    <circle cx="844" cy="70" r="12" fill="#8f7a99" />
+
+    <rect x="42" y="100" width="836" height="54" fill="#fff" stroke="#e4dfe7" />
+    <text x="72" y="134" fill="#352d38" font-size="16" font-weight="700">History</text>
+    <rect x="152" y="116" width="132" height="24" fill="#f2eef5" stroke="#b5a5bf" rx="12" />
+    <text x="172" y="133" fill="#725d7c" font-size="12">Added Card</text>
+    <rect x="296" y="116" width="132" height="24" fill="#f2eef5" stroke="#b5a5bf" rx="12" />
+    <text x="316" y="133" fill="#725d7c" font-size="12">Pasted</text>
+
+    <rect x="42" y="154" width="220" height="224" fill="#f8f6f9" stroke="#e4dfe7" />
+    <text x="70" y="190" fill="#352d38" font-size="17" font-weight="700">Components</text>
+    <rect x="70" y="210" width="160" height="30" fill="#fff" stroke="#d8cedd" rx="6" />
+    <text x="86" y="230" fill="#8f7a99" font-size="13">Search</text>
+    <rect x="70" y="260" width="54" height="24" fill="#f2eef5" stroke="#b5a5bf" rx="12" />
+    <text x="88" y="277" fill="#725d7c" font-size="12">All</text>
+    <rect x="70" y="304" width="144" height="12" fill="#d8cedd" rx="6" />
+    <rect x="70" y="330" width="108" height="12" fill="#d8cedd" rx="6" />
+
+    <rect x="262" y="154" width="308" height="224" fill="#fff" stroke="#e4dfe7" />
+    <text x="294" y="192" fill="#352d38" font-size="16" font-weight="700">Code</text>
+    <text x="294" y="226" fill="#725d7c" font-family="Menlo, Consolas, monospace" font-size="14">&lt;Card title="Launch plan"&gt;</text>
+    <text x="314" y="254" fill="#725d7c" font-family="Menlo, Consolas, monospace" font-size="14">&lt;Badge label="Ready" /&gt;</text>
+    <text x="294" y="282" fill="#725d7c" font-family="Menlo, Consolas, monospace" font-size="14">&lt;/Card&gt;</text>
+
+    <rect x="570" y="154" width="308" height="224" fill="#fff" stroke="#e4dfe7" />
+    <text x="602" y="192" fill="#352d38" font-size="16" font-weight="700">Preview</text>
+    <rect x="604" y="220" width="216" height="88" fill="#f2eef5" stroke="#b5a5bf" rx="10" />
+    <text x="630" y="254" fill="#352d38" font-size="18" font-weight="700">Launch plan</text>
+    <rect x="630" y="272" width="68" height="24" fill="#725d7c" rx="12" />
+    <text x="648" y="289" fill="#fff" font-size="12">Ready</text>
+  </g>
+</svg>

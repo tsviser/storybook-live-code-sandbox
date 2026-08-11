@@ -1,0 +1,109 @@
+# Quick Start
+
+This guide shows the smallest working setup for `storybook-live-code-sandbox` in a Storybook project.
+
+![Sandbox integration flow](assets/sandbox-flow.svg)
+
+## 1. Install
+
+```sh
+npm install storybook-live-code-sandbox
+```
+
+Your project also needs React and Storybook. The package expects `react`, `react-dom`, and `storybook` as peer dependencies.
+
+## 2. Create A Runtime Scope
+
+The scope is the set of values available when the sandbox evaluates JSX.
+
+```ts
+import * as Demo from "./DemoComponents";
+
+export const liveCodeScope = {
+  Button: Demo.Button,
+  Card: Demo.Card,
+  Badge: Demo.Badge,
+};
+```
+
+## 3. Create A Registry
+
+The registry controls what appears in the component sidebar and what snippets are inserted.
+
+```ts
+import type { LiveCodeRegistryItem } from "storybook-live-code-sandbox";
+
+export const liveCodeRegistry: LiveCodeRegistryItem[] = [
+  {
+    name: "Button",
+    category: "Actions",
+    description: "Primary action button.",
+    sandboxVisible: true,
+    examples: [
+      {
+        name: "Primary",
+        code: '<Button label="Save changes" variant="primary" />',
+      },
+    ],
+    props: [
+      { name: "label", type: "string", required: true, importance: "high" },
+      { name: "variant", type: '"primary" | "secondary"', importance: "high" },
+    ],
+  },
+];
+```
+
+Only items with `sandboxVisible: true` are shown.
+
+## 4. Add One Sandbox Story
+
+![Sandbox workspace layout](assets/sandbox-workspace.svg)
+
+```tsx
+import type { Meta, StoryObj } from "@storybook/react-vite";
+import { addons } from "storybook/preview-api";
+import { LiveCodeSandboxProvider } from "storybook-live-code-sandbox";
+import "storybook-live-code-sandbox/styles.css";
+import { liveCodeRegistry } from "./liveCodeRegistry";
+import { liveCodeScope } from "./liveCodeScope";
+
+const meta = {
+  title: "Tools/Live Sandbox",
+  parameters: { layout: "fullscreen" },
+  render: () => (
+    <LiveCodeSandboxProvider
+      channel={addons.getChannel()}
+      checkpointInterval={5}
+      historyLimit={8}
+      registry={liveCodeRegistry}
+      scope={liveCodeScope}
+      storageKey="my-storybook-live-sandbox"
+    />
+  ),
+} satisfies Meta;
+
+export default meta;
+export const Workspace: StoryObj<typeof meta> = {};
+```
+
+## 5. Send Story Source To The Sandbox
+
+Use the same source string Storybook shows in Docs. Do not rebuild examples from a second registry.
+
+```ts
+import { addons } from "storybook/preview-api";
+import { addStoryToSandboxStorage } from "storybook-live-code-sandbox/storage";
+
+addStoryToSandboxStorage({
+  channel: addons.getChannel(),
+  code: '<Button label="Save changes" variant="primary" />',
+  storageKey: "my-storybook-live-sandbox",
+  storyName: "Primary Button",
+});
+```
+
+The helper inserts the code at the saved sandbox cursor, creates an immediate history checkpoint, and keeps the user on the current story.
+
+## Runnable Example
+
+The full basic example lives in [examples/basic-storybook](../examples/basic-storybook). It uses local demo components so you can see the sandbox working without Crossroads UI or any design-system dependency.

@@ -1,0 +1,22 @@
+{
+  "name": "storybook-live-code-sandbox-basic-example",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "storybook": "storybook dev -p 6012",
+    "build-storybook": "storybook build"
+  },
+  "dependencies": {
+    "@storybook/addon-docs": "^10.5.5",
+    "@storybook/react-vite": "^10.5.5",
+    "@vitejs/plugin-react": "latest",
+    "react": "latest",
+    "react-dom": "latest",
+    "storybook": "^10.5.5",
+    "storybook-live-code-sandbox": "^0.1.2",
+    "typescript": "^5.9.0",
+    "vite": "latest"
+  },
+  "devDependencies": {}
+}
