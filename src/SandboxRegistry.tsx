@@ -26,6 +26,33 @@ type SandboxRegistryProps = {
 
 const importanceOrder = { high: 1, normal: 2, advanced: 3 } as const;
 
+const categoryRelevance = [
+  ["layout"],
+  ["actions", "action", "buttons", "button", "controls", "control"],
+  ["data display", "data", "content"],
+  ["forms", "form"],
+  ["navigation", "nav"],
+  ["overlays", "overlay", "menu", "menus", "modal", "modals", "dialog", "dialogs"],
+  ["feedback", "feedback and status", "status"],
+] as const;
+
+function normalizeCategory(category: string) {
+  return category.trim().toLowerCase().replace(/\s+/g, " ");
+}
+
+function categoryPriority(category: string) {
+  const normalized = normalizeCategory(category);
+  const priority = categoryRelevance.findIndex((aliases) => (aliases as readonly string[]).includes(normalized));
+  return priority === -1 ? categoryRelevance.length : priority;
+}
+
+export function sortRegistryCategories(categories: string[]): string[] {
+  return [...categories].sort((a, b) => {
+    const priorityDifference = categoryPriority(a) - categoryPriority(b);
+    return priorityDifference || categories.indexOf(a) - categories.indexOf(b);
+  });
+}
+
 export function sortSuggestedProps(props: LiveCodeRegistryProp[]): LiveCodeRegistryProp[] {
   return [...props].sort((a, b) => {
     const aRank = a.required ? 0 : importanceOrder[a.importance ?? "normal"];
@@ -67,7 +94,7 @@ export function SandboxRegistry({
     const small = new Set(ordered.filter((category) => (counts.get(category) ?? 0) < 3));
     return {
       counts,
-      categories: ordered.filter((category) => !small.has(category)),
+      categories: sortRegistryCategories(ordered.filter((category) => !small.has(category))),
       small,
       otherCount: Array.from(small).reduce((total, category) => total + (counts.get(category) ?? 0), 0),
     };

@@ -484,14 +484,19 @@ export function LiveCodeSandboxProvider({
               value={state.code}
             />
             {!state.code ? (
-              <button className="sb-live-code-sandbox__editorEmpty" onClick={() => editorViewRef.current?.focus()} type="button">
+              <button className="sb-live-code-sandbox__editorEmpty" onClick={() => {
+                editorViewRef.current?.focus();
+                if (managed && !state.code.trim()) setRegistryOpen(true);
+              }} type="button">
                 <strong>Start composing</strong>
                 <span>Choose a component from the sidebar, paste JS/JSX code, or add an example from Storybook.</span>
                 <small>Place the cursor where you want the next component to appear.</small>
               </button>
             ) : null}
           </div>,
-            preview: <div className="sb-live-code-sandbox__preview" aria-label="Composition preview">
+            preview: <div className="sb-live-code-sandbox__preview" aria-label="Composition preview" onClick={() => {
+              if (managed && !state.code.trim()) setRegistryOpen(true);
+            }}>
             <LiveProvider code={getPreviewCode(state.lastSuccessfulCode)} scope={liveScope} noInline={false}>
               <RuntimeErrorReporter onError={(message) => setNotice({ message: `Preview could not render: ${message}`, tone: "warning" })} />
               <LivePreview />

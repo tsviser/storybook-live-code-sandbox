@@ -6,7 +6,7 @@ production-readiness claim.
 
 ## Evidence completed
 
-- Package unit tests: 36 passed.
+- Package unit tests: 43 passed.
 - Integration-contract tests: 5 passed.
 - Package build: passed.
 - Release check and `npm pack --dry-run`: passed.
@@ -33,10 +33,27 @@ production-readiness claim.
 
 - Storybook currently reports an outdated JSX-transform warning during the
   example dev server startup.
-- The example build reports chunks larger than 500 kB after minification;
-  investigate code-splitting before a performance-focused release.
 - `react-live` evaluation limitations and the preview error model should be
   documented before a production stability claim.
+- The default UI artifact is thinner than the adapted path it is tested
+  through: its search field ignores `options` and `onOptionSelect`, its dialog
+  has no focus trap, Escape handling, or focus restoration, and its tabs have
+  no `aria-controls` or arrow-key navigation. Cover the default artifact with
+  its own tests before claiming accessibility parity.
+- `crypto.randomUUID` and `localStorage.setItem` are called without guards.
+  Both fail in real environments (non-secure contexts, Safari private mode,
+  quota exhaustion) where the read path already degrades safely.
+- The manifest declares two symbols for the root subpath while `src/index.ts`
+  exports sixteen. The validator compares subpaths only, so the gap passes.
+
+## Resolved follow-ups
+
+- The `storage` subpath no longer imports the CodeMirror JSX parser at module
+  scope. It was pulling a 441 kB chunk (the parser alone measures 343 kB
+  minified, 116 kB gzipped) into every Docs page that wired story transfer.
+  The subpath is now an asynchronous shell that loads the parser on first
+  transfer; `dist/storage.js` is 0.21 kB. This was the cause of the
+  larger-than-500 kB chunk warning in the example build.
 
 The agent integration remains read-only discovery. It does not authorize
 source mutation, publishing, releases, or external repository writes.

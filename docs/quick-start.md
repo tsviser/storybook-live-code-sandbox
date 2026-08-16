@@ -94,7 +94,7 @@ Use the same source string Storybook shows in Docs. Do not rebuild examples from
 import { addons } from "storybook/preview-api";
 import { addStoryToSandboxStorage } from "storybook-live-code-sandbox/storage";
 
-addStoryToSandboxStorage({
+await addStoryToSandboxStorage({
   channel: addons.getChannel(),
   code: '<Button label="Save changes" variant="primary" />',
   storageKey: "my-storybook-live-sandbox",
@@ -103,6 +103,8 @@ addStoryToSandboxStorage({
 ```
 
 The helper inserts the code at the saved sandbox cursor, creates an immediate history checkpoint, and keeps the user on the current story.
+
+The `storage` subpath is asynchronous on purpose. It loads the JSX parser that finds a safe insertion point only when a transfer actually runs, so a Docs page that imports this helper does not pay for the parser on every page load. Call it from a click handler and handle the rejection.
 
 ## Runnable Example
 

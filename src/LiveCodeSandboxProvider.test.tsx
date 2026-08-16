@@ -83,7 +83,7 @@ describe("LiveCodeSandboxProvider", () => {
   it("closes an unpinned managed component panel when pointing outside it", () => {
     render(
       <LiveCodeSandboxProvider
-        initialCode=""
+        initialCode="<Card />"
         managed
         registry={registry}
         scope={{ Button, Card, IconButton, Link }}
@@ -91,7 +91,7 @@ describe("LiveCodeSandboxProvider", () => {
       />
     );
 
-    fireEvent.click(screen.getByLabelText("Sandbox sidebar"));
+    fireEvent.click(screen.getByRole("button", { name: "Open components" }));
     expect(document.querySelector(".sb-live-code-sandbox__body")).toHaveAttribute("data-registry-open", "true");
 
     const separator = document.createElement("button");
@@ -105,6 +105,28 @@ describe("LiveCodeSandboxProvider", () => {
 
     fireEvent.click(screen.getByLabelText("Composition preview"));
     expect(document.querySelector(".sb-live-code-sandbox__body")).not.toHaveAttribute("data-registry-open");
+  });
+
+  it("reopens Components when an empty managed stage is clicked", async () => {
+    const user = userEvent.setup();
+    render(
+      <LiveCodeSandboxProvider
+        initialCode=""
+        managed
+        registry={registry}
+        scope={{ Button, Card, IconButton, Link }}
+        storageKey="managed-empty-stage"
+      />
+    );
+
+    await user.click(screen.getByRole("button", { name: "Close components" }));
+    expect(screen.getByRole("button", { name: "Open components" })).toBeInTheDocument();
+
+    await user.click(screen.getByLabelText("Composition preview"));
+    expect(screen.getByRole("button", { name: "Close components" })).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: /Start composingChoose a component/ }));
+    expect(screen.getByRole("button", { name: "Close components" })).toBeInTheDocument();
   });
 
   it("does not dismiss the component panel when using its toolbar toggle", async () => {

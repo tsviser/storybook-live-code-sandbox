@@ -68,7 +68,7 @@ Use the exact source string already resolved by Storybook's Docs `Canvas` and pa
 ```ts
 import { addStoryToSandboxStorage } from "storybook-live-code-sandbox/storage";
 
-addStoryToSandboxStorage({
+await addStoryToSandboxStorage({
   channel: addons.getChannel(),
   code: sourceProps.code,
   storageKey: "my-library-live-code-sandbox",
@@ -76,7 +76,9 @@ addStoryToSandboxStorage({
 });
 ```
 
-The helper inserts at the saved cursor, creates an immediate `Added <story>` checkpoint, and broadcasts a storage-key-scoped synchronization event. It does not navigate to or open the sandbox. Empty source or unavailable storage throws without changing the workspace.
+The helper inserts at the saved cursor, creates an immediate `Added <story>` checkpoint, and broadcasts a storage-key-scoped synchronization event. It does not navigate to or open the sandbox. Empty source, unavailable storage, or the absence of a safe top-level insertion point rejects without changing the workspace.
+
+The `storage` subpath is asynchronous because it loads the JSX parser on first use instead of at module scope. Importing it into a Docs page costs under 1 kB; the parser arrives only when a story is actually transferred. The synchronous export from the package root is unchanged and stays appropriate inside the sandbox workspace, which already loads the editor.
 
 Manager links can navigate to the shared host in response to the exported event:
 
