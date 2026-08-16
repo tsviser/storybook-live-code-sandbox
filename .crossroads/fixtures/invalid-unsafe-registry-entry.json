@@ -1,0 +1,10 @@
+{
+  "kind": "registry-entry",
+  "entry": {
+    "name": "Unsafe",
+    "sandboxVisible": true,
+    "examples": [
+      { "name": "Dynamic", "code": "<Button />; eval(userInput)" }
+    ]
+  }
+}

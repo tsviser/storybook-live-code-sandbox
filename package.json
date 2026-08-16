@@ -57,8 +57,10 @@
   "scripts": {
     "build": "vite build && tsc -p tsconfig.json",
     "test": "vitest run",
+    "integration:check": "node scripts/validate-integration.mjs",
+    "integration:test": "node --test scripts/validate-integration.test.mjs",
     "prepare": "npm run build",
-    "release:check": "npm test && npm run build && npm pack --dry-run",
+    "release:check": "npm test && npm run build && npm run integration:test && npm run integration:check && npm pack --dry-run",
     "prepublishOnly": "npm test && npm run build"
   },
   "keywords": [
