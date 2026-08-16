@@ -1,8 +1,9 @@
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it } from "vitest";
 import { LiveCodeSandboxProvider } from "./LiveCodeSandboxProvider";
-import { safeParseStorage } from "./editorState";
+import { createDefaultStorage, safeParseStorage } from "./editorState";
+import { getLiveCodeSandboxSyncEvent } from "./events";
 
 const registry = [
   {
@@ -269,5 +270,29 @@ describe("LiveCodeSandboxProvider", () => {
       checkpoints: [],
       insertionActionCount: 0,
     });
+  });
+
+  it("applies a synchronized Storybook channel state to the mounted provider", async () => {
+    const listeners = new Map<string, (payload: unknown) => void>();
+    const channel = {
+      emit: vi.fn(),
+      on: vi.fn((eventName: string, listener: (payload: unknown) => void) => listeners.set(eventName, listener)),
+      off: vi.fn(),
+    };
+
+    render(
+      <LiveCodeSandboxProvider
+        channel={channel}
+        registry={registry}
+        scope={{ Button, Card, IconButton, Link }}
+        storageKey="channel-sync"
+      />
+    );
+
+    const synchronized = createDefaultStorage("<Card />");
+    listeners.get(getLiveCodeSandboxSyncEvent("channel-sync"))?.(synchronized);
+
+    await waitFor(() => expect(editorText()).toContain("<Card />"));
+    expect(screen.getByLabelText("Composition preview")).toHaveTextContent("Card");
   });
 });
