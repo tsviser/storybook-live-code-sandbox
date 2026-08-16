@@ -1,0 +1,87 @@
+{
+  "contractVersion": "0.1",
+  "package": {
+    "name": "storybook-live-code-sandbox",
+    "version": "0.1.2",
+    "repository": "https://github.com/tsviser/storybook-live-code-sandbox",
+    "defaultBranch": "main"
+  },
+  "agentSystem": {
+    "registryEntry": "live_code_sandbox",
+    "agent": "live-code-sandbox-specialist",
+    "skill": "crossroads-live-code-sandbox",
+    "source": "https://github.com/tsviser/crossroads-agent-system"
+  },
+  "publicExports": [
+    { "subpath": ".", "symbols": ["LiveCodeSandboxProvider", "withLiveCodeSandbox"] },
+    { "subpath": "./preview", "symbols": ["LiveCodeSandboxProvider", "withLiveCodeSandbox"] },
+    { "subpath": "./events", "symbols": ["LIVE_CODE_SANDBOX_OPEN_EVENT", "getLiveCodeSandboxSyncEvent", "requestLiveCodeSandboxOpen"] },
+    { "subpath": "./storage", "symbols": ["addStoryToSandboxStorage"] },
+    { "subpath": "./artifacts/default", "symbols": ["defaultLiveCodeSandboxArtifact"] },
+    { "subpath": "./artifacts/crossroads-ui", "symbols": ["createCrossroadsUIArtifact"] },
+    { "subpath": "./package.json", "symbols": [] },
+    { "subpath": "./styles.css", "symbols": [] }
+  ],
+  "boundaries": {
+    "editor": "CodeMirror editor mounted by LiveCodeSandboxProvider in the Storybook preview boundary",
+    "preview": "react-live LiveProvider and LivePreview render the last successful composition inside the provider",
+    "runtimeScope": "LiveCodeScope is the explicit name-to-value namespace supplied to react-live; it is not a component catalog",
+    "registry": "LiveCodeRegistryItem metadata controls visible, selectable examples and prop suggestions; it is not the runtime namespace",
+    "storage": "LiveCodeSandboxStorage is persisted under the caller-provided storageKey and synchronized through browser or Storybook channel events",
+    "managerCommunication": "Only the documented open and synchronization events cross the Storybook channel boundary"
+  },
+  "artifactAdapters": [
+    {
+      "name": "default",
+      "subpath": "./artifacts/default",
+      "packageAgnostic": true
+    },
+    {
+      "name": "crossroads-ui",
+      "subpath": "./artifacts/crossroads-ui",
+      "packageAgnostic": false,
+      "purpose": "Optional styling adapter; the reusable sandbox remains design-system agnostic"
+    }
+  ],
+  "validationCommands": [
+    "npm test",
+    "npm run build",
+    "npm run integration:check",
+    "npm run release:check"
+  ],
+  "provenance": [
+    {
+      "label": "observed",
+      "claim": "The package public subpath exports are declared by package.json.",
+      "pointer": "package.json:18"
+    },
+    {
+      "label": "observed",
+      "claim": "The provider supplies React and the declared scope to the react-live runtime.",
+      "pointer": "src/LiveCodeSandboxProvider.tsx:196"
+    },
+    {
+      "label": "observed",
+      "claim": "The provider passes the curated registry into the registry panel.",
+      "pointer": "src/LiveCodeSandboxProvider.tsx:471"
+    },
+    {
+      "label": "observed",
+      "claim": "The canonical agent-system registration is live_code_sandbox.",
+      "pointer": "https://github.com/tsviser/crossroads-agent-system/blob/main/skills/registry.yaml"
+    },
+    {
+      "label": "proposed",
+      "claim": "This repository-owned contract is a read-only discovery surface for the Agent System.",
+      "pointer": "docs/CROSSROADS_AGENT_INTEGRATION.md:1"
+    }
+  ],
+  "unsupportedCapabilities": [
+    "provider connectivity or model execution",
+    "autonomous execution or unattended source mutation",
+    "credentials, API keys, or provider configuration",
+    "external repository writes, publishing, or release authority",
+    "analytics, user data collection, or live synchronization with the Agent System",
+    "component discovery outside the declared runtime scope and registry"
+  ]
+}
