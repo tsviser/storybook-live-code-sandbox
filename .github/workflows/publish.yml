@@ -31,8 +31,14 @@ jobs:
       - name: Install dependencies
         run: npm install --ignore-scripts --no-audit --no-fund
 
+      - name: Install basic Storybook example
+        run: npm install --prefix examples/basic-storybook --ignore-scripts --no-audit --no-fund
+
       - name: Verify package
         run: npm run release:check
+
+      - name: Build local-package Storybook consumer
+        run: npm run example:build
 
       - name: Publish to npm
         run: npm publish --ignore-scripts --provenance --access public

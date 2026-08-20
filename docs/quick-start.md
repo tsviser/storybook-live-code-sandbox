@@ -102,7 +102,7 @@ await addStoryToSandboxStorage({
 });
 ```
 
-The helper inserts the code at the saved sandbox cursor, creates an immediate history checkpoint, and keeps the user on the current story.
+The helper inserts the code at the saved sandbox cursor, creates an immediate history checkpoint, and keeps the user on the current story. It updates the sandbox draft without executing it. Open the sandbox and activate **Run** when the composition is ready to preview.
 
 The `storage` subpath is asynchronous on purpose. It loads the JSX parser that finds a safe insertion point only when a transfer actually runs, so a Docs page that imports this helper does not pay for the parser on every page load. Call it from a click handler and handle the rejection.
 
@@ -120,7 +120,7 @@ Selecting a component inserts the snippet into the editor and switches the sideb
 
 ![Component inserted in the sandbox](../examples/images/Sandbox_sampleApp-Screenshot-component.jpeg)
 
-After adding several snippets, the editor and preview stay synchronized while history tracks composition checkpoints.
+After adding several snippets, activate **Run** to update the preview while history tracks composition checkpoints.
 
 ![Sandbox with composed components and history](../examples/images/Sandbox_sampleApp-Screenshot--Components.jpeg)
 

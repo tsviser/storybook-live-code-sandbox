@@ -5,11 +5,17 @@ This example shows `storybook-live-code-sandbox` with plain local React componen
 ## Run
 
 ```sh
+# From the repository root
 npm install
-npm run storybook
+npm --prefix examples/basic-storybook install
+npm --prefix examples/basic-storybook run storybook
 ```
 
 Then open `Tools/Live Sandbox`.
+
+The example depends on `file:../..` and deduplicates React in Vite. This keeps
+local browser checks on the current package build without mounting a second
+React instance.
 
 ![Basic Storybook sandbox workspace](../images/Sandbox_sampleApp-Screenshot.jpeg)
 
@@ -32,5 +38,5 @@ Then open `Tools/Live Sandbox`.
 ## Build
 
 ```sh
-npm run build-storybook
+npm --prefix examples/basic-storybook run build-storybook
 ```

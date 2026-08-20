@@ -21,8 +21,10 @@ import {
   insertSnippetSafely,
   normalizeCheckpointInterval,
   normalizeHistoryLimit,
-  safeParseStorage,
+  parseSandboxStoragePayload,
+  readSandboxStorage,
   validateJsx,
+  writeSandboxStorage,
 } from "./editorState";
 import type {
   LiveCodeCheckpoint,
@@ -43,6 +45,13 @@ type Notice = {
 };
 
 type PendingInsertion = { cursorOffset: number } | null;
+type PendingRun = {
+  code: string;
+  id: number;
+  previewCode: string;
+};
+
+const PERSISTENCE_DELAY_MS = 150;
 
 function RuntimeErrorReporter({ onError }: { onError: (message: string) => void }) {
   const { error } = useContext(LiveContext);
@@ -52,6 +61,37 @@ function RuntimeErrorReporter({ onError }: { onError: (message: string) => void 
     lastErrorRef.current = error;
     onError(error);
   }, [error, onError]);
+  return null;
+}
+
+function RunResultReporter({
+  pendingRun,
+  onError,
+  onSuccess,
+}: {
+  pendingRun: PendingRun | null;
+  onError: (run: PendingRun, message: string) => void;
+  onSuccess: (run: PendingRun) => void;
+}) {
+  const { error, newCode } = useContext(LiveContext);
+  const handledRunRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (!pendingRun || handledRunRef.current === pendingRun.id) return undefined;
+    if (error) {
+      handledRunRef.current = pendingRun.id;
+      onError(pendingRun, error);
+      return undefined;
+    }
+    if (newCode !== pendingRun.previewCode) return undefined;
+
+    const timeout = window.setTimeout(() => {
+      handledRunRef.current = pendingRun.id;
+      onSuccess(pendingRun);
+    }, 0);
+    return () => window.clearTimeout(timeout);
+  }, [error, newCode, onError, onSuccess, pendingRun]);
+
   return null;
 }
 
@@ -76,10 +116,9 @@ export function LiveCodeSandboxProvider({
   ui,
   workspaceOrientation = "horizontal",
 }: LiveCodeSandboxProviderProps) {
-  const [state, setState] = useState<LiveCodeSandboxStorage>(() => {
-    if (typeof window === "undefined") return createDefaultStorage(initialCode, checkpointInterval, historyLimit);
-    return safeParseStorage(window.localStorage.getItem(storageKey), initialCode, checkpointInterval, historyLimit);
-  });
+  const [initialStorageResult] = useState(() =>
+    readSandboxStorage(storageKey, initialCode, checkpointInterval, historyLimit));
+  const [state, setState] = useState<LiveCodeSandboxStorage>(initialStorageResult.state);
   const [filter, setFilter] = useState("");
   const [activeCategory, setActiveCategory] = useState("");
   const [activeRegistryTab, setActiveRegistryTab] = useState<RegistryTab>("components");
@@ -90,39 +129,111 @@ export function LiveCodeSandboxProvider({
   const [selectedItem, setSelectedItem] = useState<LiveCodeRegistryItem | null>(null);
   const [activeCheckpointId, setActiveCheckpointId] = useState<string | null>(null);
   const [canUndo, setCanUndo] = useState(false);
-  const [notice, setNotice] = useState<Notice | null>(null);
+  const [notice, setNotice] = useState<Notice | null>(() => {
+    if (typeof window === "undefined") return null;
+    if (initialStorageResult.outcome === "invalid") {
+      return { message: "Saved sandbox state was invalid and was not loaded.", tone: "warning" };
+    }
+    if (initialStorageResult.outcome === "unavailable") {
+      return { message: "Sandbox storage is unavailable; changes will not persist.", tone: "warning" };
+    }
+    return null;
+  });
   const [resetOpen, setResetOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [draftInterval, setDraftInterval] = useState(state.checkpointInterval);
   const [draftLimit, setDraftLimit] = useState(state.historyLimit);
   const [resetVersion, setResetVersion] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [pendingRun, setPendingRun] = useState<PendingRun | null>(null);
   const surfaceRef = useRef<HTMLElement | null>(null);
   const editorViewRef = useRef<EditorView | null>(null);
   const stateRef = useRef(state);
   const typingDirtyRef = useRef(false);
   const pendingInsertionRef = useRef<PendingInsertion>(null);
   const checkpointListRef = useRef<HTMLDivElement | null>(null);
+  const runIdRef = useRef(0);
+  const activeStorageKeyRef = useRef(storageKey);
   stateRef.current = state;
 
   useEffect(() => {
-    window.localStorage.setItem(storageKey, JSON.stringify(state));
+    if (activeStorageKeyRef.current === storageKey) return;
+    activeStorageKeyRef.current = storageKey;
+    const result = readSandboxStorage(storageKey, initialCode, checkpointInterval, historyLimit);
+    setPendingRun(null);
+    setState(result.state);
+    setDraftInterval(result.state.checkpointInterval);
+    setDraftLimit(result.state.historyLimit);
+    setResetVersion((value) => value + 1);
+    setActiveCheckpointId(null);
+    typingDirtyRef.current = false;
+    pendingInsertionRef.current = null;
+    if (result.outcome === "invalid") {
+      setNotice({ message: "Saved sandbox state was invalid and was not loaded.", tone: "warning" });
+    } else if (result.outcome === "unavailable") {
+      setNotice({ message: "Sandbox storage is unavailable; changes will not persist.", tone: "warning" });
+    }
+  }, [checkpointInterval, historyLimit, initialCode, storageKey]);
+
+  useEffect(() => {
+    const timeout = window.setTimeout(() => {
+      if (activeStorageKeyRef.current !== storageKey) return;
+      const result = writeSandboxStorage(storageKey, state);
+      if (!result.ok) {
+        setNotice({
+          message: result.reason === "quota"
+            ? "Sandbox storage is full; recent changes were not persisted."
+            : "Sandbox storage is unavailable; recent changes were not persisted.",
+          tone: "warning",
+        });
+      }
+    }, PERSISTENCE_DELAY_MS);
+    return () => window.clearTimeout(timeout);
   }, [state, storageKey]);
 
   useEffect(() => {
+    const flushLatestState = () => {
+      writeSandboxStorage(storageKey, stateRef.current);
+    };
+    window.addEventListener("pagehide", flushLatestState);
+    return () => {
+      window.removeEventListener("pagehide", flushLatestState);
+      flushLatestState();
+    };
+  }, [storageKey]);
+
+  useEffect(() => {
     const sync = (next: LiveCodeSandboxStorage) => {
+      setPendingRun(null);
       setState(next);
+      setDraftInterval(next.checkpointInterval);
+      setDraftLimit(next.historyLimit);
       setResetVersion((value) => value + 1);
       setActiveCheckpointId(null);
+      typingDirtyRef.current = false;
+      pendingInsertionRef.current = null;
+    };
+    const syncPayload = (payload: unknown) => {
+      const next = parseSandboxStoragePayload(payload, checkpointInterval, historyLimit);
+      if (!next) {
+        setNotice({ message: "Ignored invalid synchronized sandbox state.", tone: "warning" });
+        return;
+      }
+      sync(next);
     };
     const onStorage = (event: StorageEvent) => {
-      if (event.key === storageKey) sync(safeParseStorage(event.newValue, initialCode, checkpointInterval, historyLimit));
+      if (event.key !== storageKey) return;
+      if (event.newValue === null) {
+        sync(createDefaultStorage(initialCode, checkpointInterval, historyLimit));
+        return;
+      }
+      syncPayload(event.newValue);
     };
-    const onCustom = (event: Event) => sync((event as CustomEvent<LiveCodeSandboxStorage>).detail);
+    const onCustom = (event: Event) => syncPayload((event as CustomEvent<unknown>).detail);
     window.addEventListener("storage", onStorage);
     window.addEventListener(`live-code-sandbox:${storageKey}`, onCustom);
     const channelEvent = getLiveCodeSandboxSyncEvent(storageKey);
-    const onChannel = (payload: unknown) => sync(payload as LiveCodeSandboxStorage);
+    const onChannel = (payload: unknown) => syncPayload(payload);
     channel?.on?.(channelEvent, onChannel);
     return () => {
       window.removeEventListener("storage", onStorage);
@@ -200,7 +311,6 @@ export function LiveCodeSandboxProvider({
     ...current,
     code,
     cursor,
-    lastSuccessfulCode: validateJsx(code) ? current.lastSuccessfulCode : code,
   }), []);
 
   const updateCode = useCallback((code: string, cursor: number, changeKind: EditorChangeKind) => {
@@ -306,6 +416,7 @@ export function LiveCodeSandboxProvider({
   }, [insertText]);
 
   const confirmReset = useCallback(() => {
+    setPendingRun(null);
     setState((current) => createDefaultStorage(initialCode, current.checkpointInterval, current.historyLimit));
     typingDirtyRef.current = false;
     pendingInsertionRef.current = null;
@@ -378,6 +489,32 @@ export function LiveCodeSandboxProvider({
     }
   }, []);
 
+  const runCode = useCallback(() => {
+    const current = stateRef.current;
+    const diagnostic = validateJsx(current.code);
+    if (diagnostic) {
+      setNotice({ message: `Preview was not run: ${diagnostic}`, tone: "warning" });
+      return;
+    }
+    setNotice(null);
+    setPendingRun({
+      code: current.code,
+      id: ++runIdRef.current,
+      previewCode: getPreviewCode(current.code),
+    });
+  }, []);
+
+  const completeRun = useCallback((run: PendingRun) => {
+    setState((current) => ({ ...current, lastSuccessfulCode: run.code }));
+    setPendingRun((current) => current?.id === run.id ? null : current);
+    setNotice({ message: "Preview updated.", tone: "status" });
+  }, []);
+
+  const failRun = useCallback((run: PendingRun, message: string) => {
+    setPendingRun((current) => current?.id === run.id ? null : current);
+    setNotice({ message: `Preview was not updated: ${message}`, tone: "warning" });
+  }, []);
+
   const copy = useCallback(async () => {
     await navigator.clipboard?.writeText(stateRef.current.code);
     setNotice({ message: "Composition copied.", tone: "status" });
@@ -409,6 +546,7 @@ export function LiveCodeSandboxProvider({
           <strong>Live Sandbox</strong>
           <div className="sb-live-code-sandbox__actions">
             {managed ? <SandboxButton ariaLabel={registryOpen ? "Close components" : "Open components"} className="sb-live-code-sandbox__registryToggle" icon="components" onClick={() => setRegistryOpen((open) => !open)} ui={ui}>Components</SandboxButton> : null}
+            <SandboxButton ariaLabel="Run code" disabled={Boolean(pendingRun)} onClick={runCode} ui={ui}>{pendingRun ? "Running…" : "Run"}</SandboxButton>
             <SandboxButton ariaLabel="Undo" disabled={!canUndo} icon="undo" onClick={undoEditor} ui={ui}>Undo</SandboxButton>
             <SandboxButton ariaLabel="Copy code" icon="copy" onClick={copy} ui={ui}>Copy</SandboxButton>
             {managed && !hideWorkspaceOrientationAction ? <SandboxButton ariaLabel={`Use ${workspaceOrientation === "horizontal" ? "vertical" : "horizontal"} Code and Canvas layout`} icon={workspaceOrientation === "horizontal" ? "layout-vertical" : "layout-horizontal"} onClick={() => onWorkspaceOrientationChange?.(workspaceOrientation === "horizontal" ? "vertical" : "horizontal")} ui={ui}>Layout</SandboxButton> : null}
@@ -497,10 +635,13 @@ export function LiveCodeSandboxProvider({
             preview: <div className="sb-live-code-sandbox__preview" aria-label="Composition preview" onClick={() => {
               if (managed && !state.code.trim()) setRegistryOpen(true);
             }}>
-            <LiveProvider code={getPreviewCode(state.lastSuccessfulCode)} scope={liveScope} noInline={false}>
-              <RuntimeErrorReporter onError={(message) => setNotice({ message: `Preview could not render: ${message}`, tone: "warning" })} />
+            <LiveProvider code={pendingRun?.previewCode ?? getPreviewCode(state.lastSuccessfulCode)} scope={liveScope} noInline={false}>
+              <RuntimeErrorReporter onError={(message) => {
+                if (!pendingRun) setNotice({ message: `Preview could not render: ${message}`, tone: "warning" });
+              }} />
+              <RunResultReporter pendingRun={pendingRun} onError={failRun} onSuccess={completeRun} />
               <LivePreview />
-              <LiveError />
+              <LiveError role="alert" />
             </LiveProvider>
             {diagnostics ? <p className="sb-live-code-sandbox__diagnostic">{diagnostics}</p> : null}
           </div>

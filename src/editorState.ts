@@ -12,6 +12,18 @@ export const DEFAULT_CHECKPOINT_INTERVAL = 5;
 export const DEFAULT_HISTORY_LIMIT = 8;
 export const MAX_HISTORY_LIMIT = 50;
 
+export type SandboxStorageReadOutcome = "empty" | "invalid" | "loaded" | "unavailable";
+export type SandboxStorageWriteFailure = "quota" | "unavailable" | "unknown";
+export type SandboxStorageReadResult = {
+  outcome: SandboxStorageReadOutcome;
+  state: LiveCodeSandboxStorage;
+};
+export type SandboxStorageWriteResult =
+  | { ok: true }
+  | { ok: false; reason: SandboxStorageWriteFailure };
+
+let fallbackCheckpointSequence = 0;
+
 export const normalizeCheckpointInterval = (value: number | undefined): number =>
   Number.isFinite(value) ? Math.max(0, Math.floor(value ?? 0)) : DEFAULT_CHECKPOINT_INTERVAL;
 
@@ -127,10 +139,21 @@ export const addCheckpoint = (
   ...checkpoints,
   {
     ...checkpoint,
-    id: `${createdAt}-${crypto.randomUUID?.() ?? checkpoints.length}`,
+    id: `${createdAt}-${createCheckpointSuffix(checkpoints.length)}`,
     createdAt,
   },
 ].slice(-normalizeHistoryLimit(historyLimit));
+
+const createCheckpointSuffix = (checkpointCount: number): string => {
+  try {
+    const uuid = globalThis.crypto?.randomUUID?.();
+    if (uuid) return uuid;
+  } catch {
+    // Fall through to a process-local unique suffix.
+  }
+  fallbackCheckpointSequence += 1;
+  return `${checkpointCount}-${fallbackCheckpointSequence}-${Math.random().toString(36).slice(2)}`;
+};
 
 export const getPropInsertionOffset = (snippet: string): number => {
   const openingTag = snippet.match(/<[A-Z][\w.]*(?=[\s/>])/);
@@ -198,8 +221,55 @@ const isCheckpoint = (value: unknown): value is LiveCodeCheckpoint => {
   if (!value || typeof value !== "object") return false;
   const item = value as Partial<LiveCodeCheckpoint>;
   return typeof item.id === "string" && typeof item.label === "string" &&
-    typeof item.code === "string" && typeof item.cursor === "number" &&
-    typeof item.createdAt === "number";
+    typeof item.code === "string" && Number.isFinite(item.cursor) &&
+    Number.isFinite(item.createdAt);
+};
+
+export const parseSandboxStoragePayload = (
+  value: unknown,
+  checkpointInterval = DEFAULT_CHECKPOINT_INTERVAL,
+  historyLimit = DEFAULT_HISTORY_LIMIT,
+): LiveCodeSandboxStorage | null => {
+  let parsed: Record<string, unknown>;
+  try {
+    const candidate = typeof value === "string" ? JSON.parse(value) : value;
+    if (!candidate || typeof candidate !== "object" || Array.isArray(candidate)) return null;
+    parsed = candidate as Record<string, unknown>;
+  } catch {
+    return null;
+  }
+
+  if (typeof parsed.version !== "number" || ![1, 2, 3].includes(parsed.version) ||
+    typeof parsed.code !== "string") return null;
+  const effectiveLimit = normalizeHistoryLimit(
+    parsed.version === 3 && typeof parsed.historyLimit === "number"
+      ? parsed.historyLimit
+      : historyLimit,
+  );
+  const code = parsed.code;
+  return {
+    version: 3,
+    code,
+    cursor: clampCursor(Number.isFinite(parsed.cursor) ? Number(parsed.cursor) : code.length, code),
+    lastSuccessfulCode: typeof parsed.lastSuccessfulCode === "string" ? parsed.lastSuccessfulCode : code,
+    checkpoints: Array.isArray(parsed.checkpoints)
+      ? parsed.checkpoints.filter(isCheckpoint).map((checkpoint) => ({
+        ...checkpoint,
+        cursor: clampCursor(checkpoint.cursor, checkpoint.code),
+      })).slice(-effectiveLimit)
+      : [],
+    checkpointInterval: normalizeCheckpointInterval(
+      parsed.version === 3 && typeof parsed.checkpointInterval === "number"
+        ? parsed.checkpointInterval
+        : checkpointInterval,
+    ),
+    historyLimit: effectiveLimit,
+    insertionActionCount:
+      parsed.version === 3 && typeof parsed.insertionActionCount === "number" &&
+        Number.isFinite(parsed.insertionActionCount)
+        ? Math.max(0, Math.floor(parsed.insertionActionCount))
+        : 0,
+  };
 };
 
 export const safeParseStorage = (
@@ -209,38 +279,73 @@ export const safeParseStorage = (
   historyLimit = DEFAULT_HISTORY_LIMIT,
 ): LiveCodeSandboxStorage => {
   if (!raw) return createDefaultStorage(initialCode, checkpointInterval, historyLimit);
+  return parseSandboxStoragePayload(raw, checkpointInterval, historyLimit)
+    ?? createDefaultStorage(initialCode, checkpointInterval, historyLimit);
+};
+
+const getBrowserStorage = (): Storage | null => {
+  if (typeof window === "undefined") return null;
   try {
-    const parsed = JSON.parse(raw) as Record<string, unknown>;
-    if (![1, 2, 3].includes(Number(parsed.version)) || typeof parsed.code !== "string") {
-      return createDefaultStorage(initialCode, checkpointInterval, historyLimit);
-    }
-    const effectiveLimit = normalizeHistoryLimit(
-      parsed.version === 3 && typeof parsed.historyLimit === "number"
-        ? parsed.historyLimit
-        : historyLimit,
-    );
-    const code = parsed.code;
-    return {
-      version: 3,
-      code,
-      cursor: clampCursor(typeof parsed.cursor === "number" ? parsed.cursor : code.length, code),
-      lastSuccessfulCode: typeof parsed.lastSuccessfulCode === "string" ? parsed.lastSuccessfulCode : code,
-      checkpoints: Array.isArray(parsed.checkpoints)
-        ? parsed.checkpoints.filter(isCheckpoint).slice(-effectiveLimit)
-        : [],
-      checkpointInterval: normalizeCheckpointInterval(
-        parsed.version === 3 && typeof parsed.checkpointInterval === "number"
-          ? parsed.checkpointInterval
-          : checkpointInterval,
-      ),
-      historyLimit: effectiveLimit,
-      insertionActionCount:
-        parsed.version === 3 && typeof parsed.insertionActionCount === "number"
-          ? Math.max(0, Math.floor(parsed.insertionActionCount))
-          : 0,
-    };
+    return window.localStorage;
   } catch {
-    return createDefaultStorage(initialCode, checkpointInterval, historyLimit);
+    return null;
+  }
+};
+
+export const readSandboxStorage = (
+  storageKey: string,
+  initialCode = DEFAULT_CODE,
+  checkpointInterval = DEFAULT_CHECKPOINT_INTERVAL,
+  historyLimit = DEFAULT_HISTORY_LIMIT,
+): SandboxStorageReadResult => {
+  const storage = getBrowserStorage();
+  if (!storage) {
+    return {
+      outcome: "unavailable",
+      state: createDefaultStorage(initialCode, checkpointInterval, historyLimit),
+    };
+  }
+  try {
+    const raw = storage.getItem(storageKey);
+    if (raw === null) {
+      return {
+        outcome: "empty",
+        state: createDefaultStorage(initialCode, checkpointInterval, historyLimit),
+      };
+    }
+    const state = parseSandboxStoragePayload(raw, checkpointInterval, historyLimit);
+    return state
+      ? { outcome: "loaded", state }
+      : {
+        outcome: "invalid",
+        state: createDefaultStorage(initialCode, checkpointInterval, historyLimit),
+      };
+  } catch {
+    return {
+      outcome: "unavailable",
+      state: createDefaultStorage(initialCode, checkpointInterval, historyLimit),
+    };
+  }
+};
+
+const isQuotaError = (error: unknown): boolean => {
+  if (!error || typeof error !== "object") return false;
+  const candidate = error as { code?: unknown; name?: unknown };
+  return candidate.name === "QuotaExceededError" || candidate.name === "NS_ERROR_DOM_QUOTA_REACHED" ||
+    candidate.code === 22 || candidate.code === 1014;
+};
+
+export const writeSandboxStorage = (
+  storageKey: string,
+  state: LiveCodeSandboxStorage,
+): SandboxStorageWriteResult => {
+  const storage = getBrowserStorage();
+  if (!storage) return { ok: false, reason: "unavailable" };
+  try {
+    storage.setItem(storageKey, JSON.stringify(state));
+    return { ok: true };
+  } catch (error) {
+    return { ok: false, reason: isQuotaError(error) ? "quota" : "unknown" };
   }
 };
 
@@ -268,19 +373,21 @@ export const addStoryToSandboxStorage = ({
   if (typeof window === "undefined" || !code.trim()) {
     throw new Error("Story source is unavailable.");
   }
-  const current = safeParseStorage(
-    window.localStorage.getItem(storageKey),
+  const readResult = readSandboxStorage(
+    storageKey,
     DEFAULT_CODE,
     checkpointInterval,
     historyLimit,
   );
+  if (readResult.outcome === "unavailable") throw new Error("Sandbox storage is unavailable.");
+  const current = readResult.state;
   const inserted = insertSnippetSafely(current.code, code, current.cursor);
   if (!inserted) throw new Error("No safe top-level insertion point is available.");
   const next: LiveCodeSandboxStorage = {
     ...current,
     code: inserted.code,
     cursor: inserted.cursor,
-    lastSuccessfulCode: validateJsx(inserted.code) ? current.lastSuccessfulCode : inserted.code,
+    lastSuccessfulCode: current.lastSuccessfulCode,
     insertionActionCount: 0,
     checkpoints: addCheckpoint(current.checkpoints, {
       label: `Added ${storyName}`,
@@ -288,7 +395,12 @@ export const addStoryToSandboxStorage = ({
       cursor: inserted.cursor,
     }, current.historyLimit),
   };
-  window.localStorage.setItem(storageKey, JSON.stringify(next));
+  const writeResult = writeSandboxStorage(storageKey, next);
+  if (!writeResult.ok) {
+    throw new Error(writeResult.reason === "quota"
+      ? "Sandbox storage quota was exceeded."
+      : "Sandbox storage is unavailable.");
+  }
   window.dispatchEvent(new CustomEvent(`live-code-sandbox:${storageKey}`, { detail: next }));
   channel?.emit(getLiveCodeSandboxSyncEvent(storageKey), next);
   return next;

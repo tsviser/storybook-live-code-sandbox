@@ -14,7 +14,7 @@
     "react": "latest",
     "react-dom": "latest",
     "storybook": "^10.5.5",
-    "storybook-live-code-sandbox": "^0.1.2",
+    "storybook-live-code-sandbox": "file:../..",
     "typescript": "^5.9.0",
     "vite": "latest"
   },
