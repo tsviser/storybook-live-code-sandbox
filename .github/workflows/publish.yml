@@ -26,10 +26,16 @@ jobs:
           cache: npm
 
       - name: Install dependencies
-        run: npm install --include=optional
+        run: npm ci --include=optional
+
+      - name: Install basic Storybook example
+        run: npm ci --prefix examples/basic-storybook --no-audit --no-fund
 
       - name: Verify package
         run: npm run release:check
+
+      - name: Build local-package Storybook consumer
+        run: npm run example:build
 
       - name: Publish to npm
         run: npm publish --provenance --access public

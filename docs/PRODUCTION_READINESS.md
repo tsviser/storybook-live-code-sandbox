@@ -24,56 +24,66 @@ The package has a sound architectural foundation:
 
 Evidence verified during the 2026-08-20 review:
 
-- 43 package unit tests passed;
+- 57 package unit tests passed;
 - 5 integration-contract tests passed;
 - the package build passed;
-- the basic Storybook consumer build passed;
+- the basic Storybook consumer build passed against the local package link;
+- desktop browser verification confirmed draft isolation, explicit Run,
+  empty-draft execution, last-good rollback, and an accessible runtime-error
+  alert;
+- two-tab browser verification confirmed debounced draft synchronization,
+  executed-preview synchronization, and reload persistence;
 - package contents passed `npm pack --dry-run --ignore-scripts` with an isolated
   npm cache; and
 - the packed artifact contained the documented `dist`, README, license, and
   package metadata only.
 
-The full local `release:check` reached `npm pack` but the default npm cache
-contained root-owned files. This is an environment failure, not a source
-failure, but a clean full run remains required release evidence. The consumer
-Storybook build also reports chunks above 500 kB. Browser behavior was not
-rerun during this review; historical smoke-test notes are not a substitute for
-checked-in browser automation.
+The full local `release:check` passes with an isolated npm cache, and pull
+request plus publication workflows now install and build the local-package
+Storybook consumer. The default npm cache still contains root-owned files, so
+release automation must continue to use a clean cache. Storybook reports an
+outdated JSX-transform warning in development and a chunk above 500 kB in the
+production build. The browser
+checks above are current manual evidence; checked-in cross-browser automation
+is still required.
 
 ## Production blockers
 
 ### P0: Explicit execution and truthful preview state
 
-The editor currently passes every syntactically valid state to `react-live`.
-There is no explicit Run action, and `lastSuccessfulCode` means syntactically
-valid rather than successfully rendered.
+Status: **implementation and initial browser verification complete; matrix open**
 
-Required outcome:
+The editor now keeps typed, pasted, inserted, restored, and transferred source
+as draft code until the user activates Run. Successful runs update the
+persisted preview source. Compile and runtime failures return to the previous
+successful preview and report an accessible error.
 
-- separate editable `draftCode` from `executedCode`;
-- execute shared, imported, or locally edited code only after an explicit Run
-  action;
-- retain the last successfully rendered composition after compile or runtime
-  failures;
-- expose compile and runtime failures through an accessible error region; and
-- document that `react-live` executes code in the Storybook page and is not a
-  security boundary.
+Remaining outcome:
+
+- verify rapid edits during a run and scope changes; repeated runs and empty
+  drafts have focused regression coverage;
+- confirm error announcements and focus behavior with assistive technology;
+- commit repeatable cross-browser tests for the verified Run and rollback
+  behavior; and
+- keep the documented `react-live` trust boundary visible in release notes.
 
 ### P0: Persistence and synchronization resilience
 
-Storage access is synchronous and unguarded, state is written on frequent
-editor updates, and custom/channel payloads are accepted without runtime
-validation.
+Status: **implementation and core multi-context verification complete; failure-mode matrix open**
 
-Required outcome:
+Storage access now reports loaded, empty, invalid, unavailable, and quota
+outcomes without crashing the workspace. Writes are debounced and flushed on
+page exit. Browser, custom-event, and Storybook channel payloads cross one
+normalization boundary before they can replace state. Changing `storageKey`
+rehydrates deliberately, and checkpoint IDs have a non-crypto fallback.
 
-- introduce a storage adapter with safe read, write, unavailable, and quota
-  outcomes;
-- debounce or otherwise bound persistence writes;
-- validate browser and Storybook channel payloads before applying them;
-- rehydrate deliberately when `storageKey` changes;
-- define a conflict policy for concurrent tabs or frames; and
-- generate checkpoint IDs safely when `globalThis.crypto` is unavailable.
+The conflict policy is last-arriving valid state wins for the complete
+workspace; concurrent field-level merging is intentionally unsupported.
+
+Remaining outcome:
+
+- verify blocked storage and quota behavior in target browsers; and
+- add committed multi-context browser coverage for the conflict policy.
 
 ### P0: Default artifact accessibility
 

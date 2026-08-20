@@ -24,6 +24,7 @@ npm test                  # vitest
 npm run build             # vite library build + TypeScript declarations
 npm run integration:check # validate the Crossroads manifest and invalid fixtures
 npm run integration:test  # node:test suite around the validator
+npm run example:build     # build Storybook against the current checkout
 npm run release:check     # all checks above + npm pack --dry-run
 ```
 
@@ -44,7 +45,8 @@ inside the Storybook preview boundary.
 - `editorState.ts` holds pure logic: safe top-level JSX insertion via the Lezer parser,
   checkpoints, prop-assignment synthesis, and versioned storage parsing. Storage is at version 3
   and migrates versions 1 and 2 on read.
-- The preview renders `lastSuccessfulCode`, so invalid intermediate JSX never blanks the canvas.
+- Draft edits execute only after the explicit Run action. The preview renders `lastSuccessfulCode`,
+  so compile and runtime failures return to the previous successful composition.
 - `ui.tsx` provides fallback controls; a `LiveCodeSandboxUIAdapter` lets a design system replace
   buttons, chips, fields, tabs, dialogs, notifications, the surface, and the workspace layout.
 

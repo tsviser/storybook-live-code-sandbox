@@ -17,6 +17,7 @@ describe("storage subpath entry", () => {
     });
 
     expect(next.code).toContain("<Button>Save</Button>");
+    expect(next.lastSuccessfulCode).toBe("");
     expect(next.checkpoints.at(-1)?.label).toBe("Added Primary");
     expect(safeParseStorage(window.localStorage.getItem(STORAGE_KEY)).code).toBe(next.code);
   });

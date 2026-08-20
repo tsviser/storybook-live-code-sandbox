@@ -22,7 +22,13 @@ jobs:
           cache: npm
 
       - name: Install dependencies
-        run: npm install --no-audit --no-fund
+        run: npm ci --no-audit --no-fund
+
+      - name: Install basic Storybook example
+        run: npm ci --prefix examples/basic-storybook --no-audit --no-fund
 
       - name: Validate package and integration contract
         run: npm run release:check
+
+      - name: Build local-package Storybook consumer
+        run: npm run example:build

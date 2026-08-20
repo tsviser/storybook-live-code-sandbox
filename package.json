@@ -59,6 +59,7 @@
     "test": "vitest run",
     "integration:check": "node scripts/validate-integration.mjs",
     "integration:test": "node --test scripts/validate-integration.test.mjs",
+    "example:build": "npm --prefix examples/basic-storybook run build-storybook",
     "prepare": "npm run build",
     "release:check": "npm test && npm run build && npm run integration:test && npm run integration:check && npm pack --dry-run",
     "prepublishOnly": "npm test && npm run build"

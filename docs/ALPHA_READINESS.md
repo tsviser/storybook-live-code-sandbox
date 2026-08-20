@@ -6,13 +6,22 @@ production-readiness claim.
 
 ## Evidence completed
 
-- Package unit tests: 43 passed.
+- Package unit tests: 57 passed.
 - Integration-contract tests: 5 passed.
 - Package build: passed.
 - Release check and `npm pack --dry-run`: passed.
 - Mounted provider synchronization test: passed for a Storybook channel
   payload.
-- Basic Storybook consumer build: passed.
+- Explicit Run tests: draft code remains unexecuted until Run, and a runtime
+  failure restores the previous successful preview.
+- Basic Storybook consumer build: passed against the local `file:../..`
+  package link with React deduplicated by Vite.
+- Current desktop browser verification: draft edits did not execute, Run
+  promoted a valid draft, and a runtime failure preserved the last successful
+  preview while exposing an alert.
+- Current two-tab browser verification: debounced drafts synchronized without
+  execution, successful Run state synchronized, and reload restored both the
+  draft and last successful preview.
 - Desktop browser smoke test: component insertion, prop suggestions, invalid
   JSX diagnostics, last-successful-preview preservation, and reset behavior
   passed.
@@ -24,8 +33,8 @@ production-readiness claim.
 - Complete human testing on the target browsers and real mobile devices.
 - Verify migration from an older storage payload; persistence across a browser
   reload passed in the basic Storybook consumer.
-- Synchronization across two local Storybook tabs with the same `storageKey`
-  passed; the provider-level channel path is also covered by a test.
+- The provider-level channel path and last-arriving-valid-state conflict policy
+  have focused tests.
 - Decide whether the `0.1.x` API and storage contract are stable enough to
   document as alpha.
 
@@ -40,9 +49,9 @@ production-readiness claim.
   has no focus trap, Escape handling, or focus restoration, and its tabs have
   no `aria-controls` or arrow-key navigation. Cover the default artifact with
   its own tests before claiming accessibility parity.
-- `crypto.randomUUID` and `localStorage.setItem` are called without guards.
-  Both fail in real environments (non-secure contexts, Safari private mode,
-  quota exhaustion) where the read path already degrades safely.
+- Persistence failure behavior and last-arriving-state synchronization now
+  have focused tests; real-browser blocked-storage, quota, reload, and
+  multi-tab verification remain open.
 - The manifest declares two symbols for the root subpath while `src/index.ts`
   exports sixteen. The validator compares subpaths only, so the gap passes.
 

@@ -15,10 +15,14 @@ npm install storybook-live-code-sandbox
 The repository includes a runnable Storybook example with local demo components:
 
 ```sh
-cd examples/basic-storybook
 npm install
-npm run storybook
+npm --prefix examples/basic-storybook install
+npm --prefix examples/basic-storybook run storybook
 ```
+
+The example intentionally links `file:../..`, so repository development and
+browser verification exercise the current checkout instead of the last
+published npm version.
 
 Open the `Tools/Live Sandbox` story, insert components from the sidebar, paste JSX, or copy examples from the demo stories. See the [quick-start guide](https://github.com/tsviser/storybook-live-code-sandbox/blob/main/docs/quick-start.md) and [basic Storybook example](https://github.com/tsviser/storybook-live-code-sandbox/tree/main/examples/basic-storybook) in GitHub.
 
@@ -76,7 +80,7 @@ await addStoryToSandboxStorage({
 });
 ```
 
-The helper inserts at the saved cursor, creates an immediate `Added <story>` checkpoint, and broadcasts a storage-key-scoped synchronization event. It does not navigate to or open the sandbox. Empty source, unavailable storage, or the absence of a safe top-level insertion point rejects without changing the workspace.
+The helper inserts at the saved cursor, creates an immediate `Added <story>` checkpoint, and broadcasts a storage-key-scoped synchronization event. It updates draft code without executing it, and it does not navigate to or open the sandbox. Open the sandbox and activate **Run** to update the preview. Empty source, unavailable storage, or the absence of a safe top-level insertion point rejects without changing the workspace.
 
 The `storage` subpath is asynchronous because it loads the JSX parser on first use instead of at module scope. Importing it into a Docs page costs under 1 kB; the parser arrives only when a story is actually transferred. The synchronous export from the package root is unchanged and stays appropriate inside the sandbox workspace, which already loads the editor.
 
@@ -126,6 +130,12 @@ Only entries with `sandboxVisible: true` appear. Categories create single-select
 
 Typing checkpoints on blur, paste checkpoints immediately, and story-source transfers checkpoint immediately. Reset remains in the dedicated view and clears code, history, undo/redo state, insertion progress, selection, and pending typing.
 
+## Execution Model
+
+Editor content is draft code. Typing, pasting, registry insertion, prop insertion, checkpoint restoration, and Storybook source transfer do not execute code automatically. Activate **Run** to validate and evaluate the current draft. A compile or runtime failure leaves the previous successful preview in place and reports the error.
+
+The preview runs through `react-live` in the Storybook preview page. It inherits that page's providers and runtime context, but it is not a security boundary. Only expose trusted runtime values through `scope`, and do not use the sandbox to execute untrusted code.
+
 ## UI Artifacts
 
 The default artifact uses the package's accessible fallback controls:
@@ -145,6 +155,10 @@ export const artifact = createCrossroadsUIArtifact(crossroadsAdapter);
 ## Persistence
 
 Storage version 3 persists code, cursor, last successful preview code, checkpoints, checkpoint interval, history retention, and insertion progress. Existing version 1 and version 2 data is migrated when read. Browser storage events and scoped channel events keep Docs frames, tabs, and the dedicated preview synchronized.
+
+Storage reads and writes degrade safely when browser storage is blocked or full. Frequent edits are persisted after a short debounce and the latest state is flushed when the page is hidden. Invalid browser or Storybook channel payloads are ignored instead of resetting the workspace.
+
+Synchronization uses a last-arriving-valid-state-wins policy for the complete workspace. It does not merge concurrent edits. Use a distinct `storageKey` for independent workspaces; tabs and frames that share a key intentionally share one composition and may replace each other's unpersisted drafts.
 
 ## Release Process
 
