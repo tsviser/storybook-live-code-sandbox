@@ -50,7 +50,7 @@ inside the Storybook preview boundary.
 
 ## Current baseline
 
-`main` and `origin/main` point to `3d780d7`, which includes:
+The current runtime baseline includes:
 
 - lazy loading for the JSX parser used by the `./storage` entry point;
 - the async `addStoryToSandboxStorage` API and corresponding documentation/tests;
@@ -63,9 +63,6 @@ The lazy-loading change is a breaking change to the `./storage` subpath: it retu
 rejects rather than throwing. The synchronous package-root export is unchanged. Versioning and the
 matching `.crossroads` manifest update are required before publishing a release containing this
 change.
-
-The root-level `sandbox-storage-lazy-parser.patch` is a historical backup of work already merged
-into `main`; do not apply it again.
 
 ## Open findings
 
