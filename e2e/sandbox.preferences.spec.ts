@@ -19,3 +19,15 @@ test("respects dark, reduced-motion, forced-color, and RTL preferences", async (
   await expect(sidebarTabs.getByRole("tab", { name: "Components" })).toBeFocused();
   await expect(page.getByRole("region", { name: "Live code sandbox" })).toBeVisible();
 });
+
+test("hides invalid registry entries and reports the configuration failure", async ({ page }) => {
+  await openSandbox(page, "/iframe.html?id=tools-live-sandbox--invalid-registry&viewMode=story");
+
+  await expect(page.getByRole("alert")).toContainText(
+    "Sandbox registry hid 2 invalid component entries.",
+  );
+  await expect(page.getByRole("button", { name: "Button" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Missing" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Unsafe" })).toHaveCount(0);
+  await expect(page.locator("vite-error-overlay, #webpack-dev-server-client-overlay")).toHaveCount(0);
+});

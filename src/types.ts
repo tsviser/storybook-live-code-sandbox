@@ -35,6 +35,25 @@ export type LiveCodeRegistryItem = {
   metadata?: Record<string, unknown>;
 };
 
+export type LiveCodeRegistryValidationIssue = {
+  code:
+    | "duplicate-item-name"
+    | "duplicate-prop"
+    | "example-missing-scope"
+    | "inconsistent-category"
+    | "invalid-category"
+    | "invalid-example-name"
+    | "invalid-generated-example"
+    | "invalid-item-name"
+    | "invalid-prop"
+    | "missing-example"
+    | "missing-scope-member"
+    | "unsafe-example";
+  itemIndex: number;
+  message: string;
+  path: string;
+};
+
 export type LiveCodeCheckpoint = {
   id: string;
   label: string;

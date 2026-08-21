@@ -12,6 +12,16 @@ test("the repository integration manifest is valid", () => {
   assert.deepEqual(validateManifest(read(".crossroads/live-code-sandbox.integration.json")), []);
 });
 
+test("generated declaration symbols must match the integration manifest", () => {
+  const manifest = read(".crossroads/live-code-sandbox.integration.json");
+  manifest.publicExports.find((entry) => entry.subpath === ".").symbols = ["LiveCodeSandboxProvider"];
+
+  assert.match(
+    validateManifest(manifest).join("\n"),
+    /public export \. is missing generated symbols/,
+  );
+});
+
 for (const fixture of [
   "invalid-artifact-adapter.json",
   "invalid-missing-provenance.json",

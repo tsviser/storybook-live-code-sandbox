@@ -49,9 +49,9 @@ export async function failSandboxBrowserApi(page: Page, api: "clipboard" | "full
   }, api);
 }
 
-export async function openSandbox(page: Page) {
-  await page.goto(storyPath);
-  await expect(page).toHaveTitle("tools-live-sandbox--workspace");
+export async function openSandbox(page: Page, path = storyPath) {
+  await page.goto(path);
+  await expect(page).toHaveTitle(/tools-live-sandbox--/);
   await expect(page.getByRole("region", { name: "Live code sandbox" })).toBeVisible({ timeout: 15_000 });
   await expect(page.locator("vite-error-overlay, #webpack-dev-server-client-overlay")).toHaveCount(0);
 }

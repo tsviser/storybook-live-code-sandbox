@@ -1,6 +1,7 @@
 export { LiveCodeSandboxProvider } from "./LiveCodeSandboxProvider";
 export { withLiveCodeSandbox } from "./preview";
 export { LIVE_CODE_SANDBOX_OPEN_EVENT, getLiveCodeSandboxSyncEvent, requestLiveCodeSandboxOpen } from "./events";
+export { validateLiveCodeRegistry } from "./registryValidation";
 export {
   DEFAULT_CHECKPOINT_INTERVAL,
   DEFAULT_CODE,
@@ -20,6 +21,7 @@ export type {
   LiveCodeRegistryExample,
   LiveCodeRegistryItem,
   LiveCodeRegistryProp,
+  LiveCodeRegistryValidationIssue,
   LiveCodeSandboxUIAdapter,
   LiveCodeSandboxConfig,
   LiveCodeSandboxChannel,

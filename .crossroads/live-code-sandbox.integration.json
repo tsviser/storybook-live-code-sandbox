@@ -13,10 +13,55 @@
     "source": "https://github.com/tsviser/crossroads-agent-system"
   },
   "publicExports": [
-    { "subpath": ".", "symbols": ["LiveCodeSandboxProvider", "withLiveCodeSandbox"] },
-    { "subpath": "./preview", "symbols": ["LiveCodeSandboxProvider", "withLiveCodeSandbox"] },
+    {
+      "subpath": ".",
+      "symbols": [
+        "AddStoryToSandboxInput",
+        "DEFAULT_CHECKPOINT_INTERVAL",
+        "DEFAULT_CODE",
+        "DEFAULT_HISTORY_LIMIT",
+        "LIVE_CODE_SANDBOX_OPEN_EVENT",
+        "LiveCodeRegistryExample",
+        "LiveCodeRegistryItem",
+        "LiveCodeRegistryProp",
+        "LiveCodeRegistryValidationIssue",
+        "LiveCodeSandboxChannel",
+        "LiveCodeSandboxConfig",
+        "LiveCodeSandboxProvider",
+        "LiveCodeSandboxProviderProps",
+        "LiveCodeSandboxStorage",
+        "LiveCodeSandboxUIAdapter",
+        "LiveCodeScope",
+        "MAX_HISTORY_LIMIT",
+        "SandboxWorkspaceProps",
+        "addRequiredPropsToSnippet",
+        "addStoryToSandboxStorage",
+        "createDefaultStorage",
+        "getLiveCodeSandboxSyncEvent",
+        "getSafeTopLevelInsertionOffset",
+        "insertSnippet",
+        "insertSnippetSafely",
+        "requestLiveCodeSandboxOpen",
+        "safeParseStorage",
+        "validateJsx",
+        "validateLiveCodeRegistry",
+        "withLiveCodeSandbox"
+      ]
+    },
+    {
+      "subpath": "./preview",
+      "symbols": [
+        "LiveCodeRegistryExample",
+        "LiveCodeRegistryItem",
+        "LiveCodeRegistryProp",
+        "LiveCodeSandboxConfig",
+        "LiveCodeSandboxProvider",
+        "LiveCodeScope",
+        "withLiveCodeSandbox"
+      ]
+    },
     { "subpath": "./events", "symbols": ["LIVE_CODE_SANDBOX_OPEN_EVENT", "getLiveCodeSandboxSyncEvent", "requestLiveCodeSandboxOpen"] },
-    { "subpath": "./storage", "symbols": ["addStoryToSandboxStorage"] },
+    { "subpath": "./storage", "symbols": ["AddStoryToSandboxInput", "LiveCodeSandboxStorage", "addStoryToSandboxStorage"] },
     { "subpath": "./artifacts/default", "symbols": ["defaultLiveCodeSandboxArtifact"] },
     { "subpath": "./artifacts/crossroads-ui", "symbols": ["createCrossroadsUIArtifact"] },
     { "subpath": "./package.json", "symbols": [] },

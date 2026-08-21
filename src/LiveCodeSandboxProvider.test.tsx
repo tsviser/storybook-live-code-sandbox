@@ -470,6 +470,27 @@ describe("LiveCodeSandboxProvider", () => {
     expect(screen.queryByText("The component is missing from the runtime scope.")).not.toBeInTheDocument();
   });
 
+  it("fails closed and warns when selectable registry entries are invalid", async () => {
+    render(
+      <LiveCodeSandboxProvider
+        registry={[
+          registry[0],
+          { name: "Missing", examples: [{ name: "Missing", code: "<Missing />" }] },
+          { name: "Unsafe", examples: [{ name: "Unsafe", code: "<Button />; window.alert('no')" }] },
+        ]}
+        scope={{ Button }}
+        storageKey="invalid-registry"
+      />
+    );
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Sandbox registry hid 2 invalid component entries.",
+    );
+    expect(screen.getByRole("button", { name: "Button" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Missing" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Unsafe" })).not.toBeInTheDocument();
+  });
+
   it("creates an interval checkpoint and lets the user delete then undo it", async () => {
     const user = userEvent.setup();
     renderSandbox("history", 2);
