@@ -25,7 +25,15 @@ npm run build             # vite library build + TypeScript declarations
 npm run integration:check # validate the Crossroads manifest and invalid fixtures
 npm run integration:test  # node:test suite around the validator
 npm run release:check     # all checks above + npm pack --dry-run
+npm run consistency:all   # full metadata and workflow snapshot
+npm run consistency:staged # metadata checks for the staged snapshot
+npm run consistency:branch # metadata checks against origin/main
 ```
+
+Run `npm run hooks:install` once per checkout to enable the tracked pre-push hook. The hook runs
+the inexpensive branch consistency check before the full release validation. Publication runs the
+full-snapshot check before installing dependencies. Set
+`CONSISTENCY_BASE_REF` only when the branch intentionally targets a base other than `origin/main`.
 
 Release work is deliberately staged: run `release:check`, install the tarball in a consuming
 Storybook, complete manual desktop and mobile testing, and publish only after explicit approval.
