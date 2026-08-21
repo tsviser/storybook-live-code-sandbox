@@ -1,6 +1,6 @@
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { LiveCodeSandboxProvider } from "./LiveCodeSandboxProvider";
 import { createDefaultStorage, safeParseStorage } from "./editorState";
 import { getLiveCodeSandboxSyncEvent } from "./events";
@@ -33,6 +33,9 @@ const registry = [
 
 const Button = ({ children }: { children: React.ReactNode }) => <button type="button">{children}</button>;
 const Card = () => <article>Card</article>;
+const Broken = () => {
+  throw new Error("Broken preview");
+};
 const IconButton = () => <button type="button">Icon</button>;
 const Link = () => <a href="#test">Link</a>;
 
@@ -240,6 +243,155 @@ describe("LiveCodeSandboxProvider", () => {
     expect(screen.getByLabelText("variant values")).toBeInTheDocument();
   });
 
+  it("keeps valid edits as draft code until Run is activated", async () => {
+    const user = userEvent.setup();
+    render(
+      <LiveCodeSandboxProvider
+        initialCode="<Card />"
+        registry={registry}
+        scope={{ Button, Card, IconButton, Link }}
+        storageKey="explicit-run"
+      />
+    );
+
+    const preview = screen.getByLabelText("Composition preview");
+    await waitFor(() => expect(preview).toHaveTextContent("Card"));
+    await user.click(screen.getByRole("button", { name: "Button" }));
+
+    expect(editorText()).toContain("Save</Button>");
+    expect(preview).toHaveTextContent("Card");
+    expect(preview).not.toHaveTextContent("Save");
+    await waitFor(() => expect(
+      safeParseStorage(window.localStorage.getItem("explicit-run")).lastSuccessfulCode,
+    ).toBe("<Card />"));
+
+    await user.click(screen.getByRole("button", { name: "Run code" }));
+
+    await waitFor(() => expect(preview).toHaveTextContent("Save"));
+    await waitFor(() => expect(
+      safeParseStorage(window.localStorage.getItem("explicit-run")).lastSuccessfulCode,
+    ).toContain("Save</Button>"));
+  });
+
+  it("restores the last good preview when a Run attempt throws", async () => {
+    const user = userEvent.setup();
+    render(
+      <LiveCodeSandboxProvider
+        initialCode="<Card />"
+        registry={[{ name: "Broken", examples: [{ name: "Broken", code: "<Broken />" }] }]}
+        scope={{ Broken, Card }}
+        storageKey="runtime-run-error"
+      />
+    );
+
+    const preview = screen.getByLabelText("Composition preview");
+    await waitFor(() => expect(preview).toHaveTextContent("Card"));
+    await user.click(screen.getByRole("button", { name: "Broken" }));
+    await user.click(screen.getByRole("button", { name: "Run code" }));
+
+    expect(await screen.findByText(/Preview was not updated:.*Broken preview/)).toBeInTheDocument();
+    await waitFor(() => expect(preview).toHaveTextContent("Card"));
+    await waitFor(() => expect(
+      safeParseStorage(window.localStorage.getItem("runtime-run-error")).lastSuccessfulCode,
+    ).toBe("<Card />"));
+  });
+
+  it("does not replace the last good preview when draft JSX is invalid", async () => {
+    const user = userEvent.setup();
+    render(
+      <LiveCodeSandboxProvider
+        initialCode="<Card />"
+        registry={registry}
+        scope={{ Button, Card, IconButton, Link }}
+        storageKey="invalid-run"
+      />
+    );
+
+    const preview = screen.getByLabelText("Composition preview");
+    await waitFor(() => expect(preview).toHaveTextContent("Card"));
+    act(() => {
+      window.dispatchEvent(new CustomEvent("live-code-sandbox:invalid-run", {
+        detail: { ...createDefaultStorage("<Card />"), code: "<Card" },
+      }));
+    });
+    await waitFor(() => expect(editorText()).toBe("<Card"));
+
+    await user.click(screen.getByRole("button", { name: "Run code" }));
+
+    expect(screen.getByRole("alert")).toHaveTextContent("Preview was not run");
+    expect(preview).toHaveTextContent("Card");
+    await waitFor(() => expect(
+      safeParseStorage(window.localStorage.getItem("invalid-run")).lastSuccessfulCode,
+    ).toBe("<Card />"));
+  });
+
+  it("runs an empty draft and clears the last successful preview", async () => {
+    const user = userEvent.setup();
+    render(
+      <LiveCodeSandboxProvider
+        initialCode="<Card />"
+        registry={registry}
+        scope={{ Button, Card, IconButton, Link }}
+        storageKey="empty-run"
+      />
+    );
+
+    const preview = screen.getByLabelText("Composition preview");
+    await waitFor(() => expect(preview).toHaveTextContent("Card"));
+    act(() => {
+      window.dispatchEvent(new CustomEvent("live-code-sandbox:empty-run", {
+        detail: { ...createDefaultStorage("<Card />"), code: "", cursor: 0 },
+      }));
+    });
+    await waitFor(() => expect(editorText()).toBe(""));
+
+    await user.click(screen.getByRole("button", { name: "Run code" }));
+
+    await waitFor(() => expect(screen.getByRole("status")).toHaveTextContent("Preview updated."));
+    expect(preview).toHaveTextContent(/^$/);
+    expect(safeParseStorage(window.localStorage.getItem("empty-run")).lastSuccessfulCode).toBe("");
+  });
+
+  it("promotes each successful Run while keeping later edits as drafts", async () => {
+    const user = userEvent.setup();
+    render(
+      <LiveCodeSandboxProvider
+        initialCode="<Card />"
+        registry={registry}
+        scope={{ Button, Card, IconButton, Link }}
+        storageKey="repeated-runs"
+      />
+    );
+
+    const preview = screen.getByLabelText("Composition preview");
+    act(() => {
+      window.dispatchEvent(new CustomEvent("live-code-sandbox:repeated-runs", {
+        detail: { ...createDefaultStorage("<Card />"), code: "<Button>One</Button>" },
+      }));
+    });
+    await user.click(screen.getByRole("button", { name: "Run code" }));
+    await waitFor(() => expect(preview).toHaveTextContent("One"));
+    await waitFor(() => expect(
+      safeParseStorage(window.localStorage.getItem("repeated-runs")).lastSuccessfulCode,
+    ).toBe("<Button>One</Button>"));
+
+    const afterFirstRun = safeParseStorage(window.localStorage.getItem("repeated-runs"));
+    act(() => {
+      window.dispatchEvent(new CustomEvent("live-code-sandbox:repeated-runs", {
+        detail: { ...afterFirstRun, code: "<Button>Two</Button>" },
+      }));
+    });
+    await waitFor(() => expect(editorText()).toBe("<Button>Two</Button>"));
+    expect(preview).toHaveTextContent("One");
+
+    await user.click(screen.getByRole("button", { name: "Run code" }));
+
+    await waitFor(() => expect(preview).toHaveTextContent("Two"));
+    await waitFor(() => expect(
+      safeParseStorage(window.localStorage.getItem("repeated-runs")).lastSuccessfulCode,
+    ).toBe("<Button>Two</Button>"));
+  });
+
   it("hides components that are not ready for sandbox insertion", () => {
     renderSandbox("warning");
 
@@ -272,8 +424,10 @@ describe("LiveCodeSandboxProvider", () => {
     fireEvent.blur(content);
 
     expect(await screen.findByRole("button", { name: "Restore Edited" })).toBeInTheDocument();
-    const state = safeParseStorage(window.localStorage.getItem("typing"));
-    expect(state.checkpoints.filter((checkpoint) => checkpoint.label === "Edited")).toHaveLength(1);
+    await waitFor(() => expect(
+      safeParseStorage(window.localStorage.getItem("typing")).checkpoints
+        .filter((checkpoint) => checkpoint.label === "Edited"),
+    ).toHaveLength(1));
   });
 
   it("resets code and all history after confirmation without leaving the view", async () => {
@@ -316,5 +470,115 @@ describe("LiveCodeSandboxProvider", () => {
 
     await waitFor(() => expect(editorText()).toContain("<Card />"));
     expect(screen.getByLabelText("Composition preview")).toHaveTextContent("Card");
+  });
+
+  it("ignores malformed synchronized payloads", async () => {
+    const listeners = new Map<string, (payload: unknown) => void>();
+    render(
+      <LiveCodeSandboxProvider
+        channel={{
+          emit: vi.fn(),
+          on: (eventName, listener) => listeners.set(eventName, listener),
+        }}
+        initialCode="<Card />"
+        registry={registry}
+        scope={{ Button, Card, IconButton, Link }}
+        storageKey="invalid-sync"
+      />
+    );
+
+    act(() => listeners.get(getLiveCodeSandboxSyncEvent("invalid-sync"))?.({ version: 3, code: 42 }));
+
+    expect(await screen.findByText("Ignored invalid synchronized sandbox state.")).toBeInTheDocument();
+    expect(editorText()).toBe("<Card />");
+    expect(screen.getByLabelText("Composition preview")).toHaveTextContent("Card");
+  });
+
+  it("reports invalid initial storage without loading it", async () => {
+    window.localStorage.setItem("invalid-initial-storage", "not-json");
+    render(
+      <LiveCodeSandboxProvider
+        initialCode="<Card />"
+        registry={registry}
+        scope={{ Button, Card, IconButton, Link }}
+        storageKey="invalid-initial-storage"
+      />
+    );
+
+    expect(await screen.findByText("Saved sandbox state was invalid and was not loaded."))
+      .toBeInTheDocument();
+    expect(editorText()).toBe("<Card />");
+  });
+
+  it("rehydrates deliberately when the storage key changes", async () => {
+    window.localStorage.setItem("workspace-a", JSON.stringify(createDefaultStorage("<Card />")));
+    window.localStorage.setItem("workspace-b", JSON.stringify(createDefaultStorage("<Button>Second</Button>")));
+    const view = render(
+      <LiveCodeSandboxProvider
+        registry={registry}
+        scope={{ Button, Card, IconButton, Link }}
+        storageKey="workspace-a"
+      />
+    );
+    await waitFor(() => expect(editorText()).toBe("<Card />"));
+
+    view.rerender(
+      <LiveCodeSandboxProvider
+        registry={registry}
+        scope={{ Button, Card, IconButton, Link }}
+        storageKey="workspace-b"
+      />
+    );
+
+    await waitFor(() => expect(editorText()).toBe("<Button>Second</Button>"));
+    expect(screen.getByLabelText("Composition preview")).toHaveTextContent("Second");
+  });
+
+  it("debounces writes and lets the last arriving valid synchronized state win", async () => {
+    const listeners = new Map<string, (payload: unknown) => void>();
+    const setItem = vi.spyOn(Storage.prototype, "setItem");
+    render(
+      <LiveCodeSandboxProvider
+        channel={{
+          emit: vi.fn(),
+          on: (eventName, listener) => listeners.set(eventName, listener),
+        }}
+        registry={registry}
+        scope={{ Button, Card, IconButton, Link }}
+        storageKey="last-arrival-wins"
+      />
+    );
+    const synchronize = listeners.get(getLiveCodeSandboxSyncEvent("last-arrival-wins"));
+    act(() => synchronize?.(createDefaultStorage("<Button>One</Button>")));
+    act(() => synchronize?.(createDefaultStorage("<Button>Two</Button>")));
+    act(() => synchronize?.(createDefaultStorage("<Button>Three</Button>")));
+
+    await waitFor(() => expect(setItem).toHaveBeenCalledTimes(1));
+    expect(safeParseStorage(window.localStorage.getItem("last-arrival-wins")).code)
+      .toBe("<Button>Three</Button>");
+    setItem.mockRestore();
+  });
+
+  it("flushes the latest draft when the page is hidden", async () => {
+    const user = userEvent.setup();
+    renderSandbox("pagehide-flush");
+    await user.click(screen.getByRole("button", { name: "Button" }));
+
+    act(() => window.dispatchEvent(new Event("pagehide")));
+
+    expect(safeParseStorage(window.localStorage.getItem("pagehide-flush")).code)
+      .toContain("Save</Button>");
+  });
+
+  it("reports persistence quota failures without losing the in-memory draft", async () => {
+    const setItem = vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
+      throw new DOMException("Full", "QuotaExceededError");
+    });
+    renderSandbox("quota-failure");
+
+    expect(await screen.findByText("Sandbox storage is full; recent changes were not persisted."))
+      .toBeInTheDocument();
+    expect(screen.getByRole("textbox")).toBeInTheDocument();
+    setItem.mockRestore();
   });
 });

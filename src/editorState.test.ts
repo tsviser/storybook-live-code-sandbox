@@ -12,8 +12,11 @@ import {
   getSafeTopLevelInsertionOffset,
   insertSnippet,
   insertSnippetSafely,
+  parseSandboxStoragePayload,
+  readSandboxStorage,
   safeParseStorage,
   validateJsx,
+  writeSandboxStorage,
 } from "./editorState";
 
 describe("insertSnippet", () => {
@@ -76,6 +79,27 @@ describe("storage", () => {
     expect(safeParseStorage("{")).toEqual(createDefaultStorage());
   });
 
+  it("rejects malformed synchronization payloads instead of resetting state", () => {
+    expect(parseSandboxStoragePayload({ version: 3, code: 42 })).toBeNull();
+    expect(parseSandboxStoragePayload("not-json")).toBeNull();
+    expect(() => parseSandboxStoragePayload({ version: Symbol("invalid"), code: "" })).not.toThrow();
+    expect(parseSandboxStoragePayload({ version: Symbol("invalid"), code: "" })).toBeNull();
+  });
+
+  it("reports unavailable reads and quota-limited writes without throwing", () => {
+    const getItem = vi.spyOn(Storage.prototype, "getItem").mockImplementation(() => {
+      throw new DOMException("Blocked", "SecurityError");
+    });
+    expect(readSandboxStorage("blocked")).toMatchObject({ outcome: "unavailable" });
+    getItem.mockRestore();
+
+    const setItem = vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
+      throw new DOMException("Full", "QuotaExceededError");
+    });
+    expect(writeSandboxStorage("full", createDefaultStorage())).toEqual({ ok: false, reason: "quota" });
+    setItem.mockRestore();
+  });
+
   it.each([1, 2])("migrates version %s storage without losing the composition", (version) => {
     expect(safeParseStorage(JSON.stringify({
       version,
@@ -109,8 +133,10 @@ describe("storage", () => {
     const result = addStoryToSandboxStorage({ storageKey, code: source, storyName: "Quiet" });
 
     expect(result.code).toBe(`<Before />\n${source}\n<After />`);
+    expect(result.lastSuccessfulCode).toBe("<Before /><After />");
     const stored = safeParseStorage(window.localStorage.getItem(storageKey));
     expect(stored.code).toBe(`<Before />\n${source}\n<After />`);
+    expect(stored.lastSuccessfulCode).toBe("<Before /><After />");
     expect(stored.checkpoints.at(-1)?.label).toBe("Added Quiet");
     expect(stored.insertionActionCount).toBe(0);
     expect(listener).toHaveBeenCalledOnce();
@@ -136,7 +162,7 @@ describe("storage", () => {
       storageKey: "blocked-storage",
       code: "<Button />",
       storyName: "Blocked",
-    })).toThrow("Storage unavailable");
+    })).toThrow("Sandbox storage quota was exceeded");
 
     setItem.mockRestore();
   });
@@ -154,6 +180,15 @@ describe("checkpoints", () => {
     );
 
     expect(checkpoints.map((checkpoint) => checkpoint.label)).toEqual(["Point 2", "Point 3", "Point 4"]);
+  });
+
+  it("creates unique checkpoint IDs when crypto is unavailable", () => {
+    vi.stubGlobal("crypto", undefined);
+    const first = addCheckpoint([], { label: "First", code: "", cursor: 0 }, 8, 1);
+    const second = addCheckpoint(first, { label: "Second", code: "", cursor: 0 }, 8, 1);
+    vi.unstubAllGlobals();
+
+    expect(first[0].id).not.toBe(second[1].id);
   });
 });
 
