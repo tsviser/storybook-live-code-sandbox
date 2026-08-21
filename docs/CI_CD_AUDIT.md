@@ -25,12 +25,14 @@ required deterministic check and publication remains manual-or-tag-triggered.
 
 The previous publication path ran package tests twice and built the package five times: during
 install, explicit release validation, dry-run packing, `prepublishOnly`, and final packing. CI now
-installs with lifecycle scripts disabled, the release dry run skips lifecycle scripts after its
-explicit build, and the already-verified publish step also skips lifecycle scripts. The resulting
-publication job runs tests once and builds once, removing one test execution and four builds. The
-same install and dry-run changes remove two redundant builds from validation. Because historical
-jobs average under 30 seconds, the absolute hosted-runner saving is expected to be seconds per run,
-not minutes.
+uses the repository's platform-safe `npm install` behavior with lifecycle scripts disabled. A
+clean `npm ci` is intentionally avoided because it has repeatedly failed to resolve this package's
+platform-specific native optional dependencies on Linux runners. The release dry run skips
+lifecycle scripts after its explicit build, and the already-verified publish step also skips
+lifecycle scripts. The resulting publication job runs tests once and builds once, removing one
+test execution and four builds. The same install and dry-run changes remove two redundant builds
+from validation. Because historical jobs average under 30 seconds, the absolute hosted-runner
+saving is expected to be seconds per run, not minutes.
 
 ## Consistency gate
 
