@@ -62,6 +62,11 @@ production-readiness claim.
 
 ## Resolved follow-ups
 
+- Supported versions are now explicit: Storybook 10.x, React/React DOM 18-19,
+  Node 20.19+/22.12+, npm 10-11, and the committed Playwright engines. CI adds
+  lower-line Node/React consumer builds while retaining one full browser run.
+- Root and example lockfiles are authoritative and checked after the
+  platform-safe install; floating `latest` development ranges were removed.
 - Selectable registry entries now cross a fail-closed validation boundary for
   unique identities, runtime scope membership, safe insertable examples,
   category consistency, and generated prop metadata. Invalid entries are

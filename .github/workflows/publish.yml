@@ -34,6 +34,9 @@ jobs:
       - name: Install basic Storybook example
         run: npm install --prefix examples/basic-storybook --ignore-scripts --no-audit --no-fund
 
+      - name: Verify authoritative lockfiles
+        run: git diff --exit-code -- package-lock.json examples/basic-storybook/package-lock.json
+
       - name: Verify package
         run: npm run release:check
 

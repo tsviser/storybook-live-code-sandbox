@@ -34,6 +34,9 @@ jobs:
       - name: Install basic Storybook example
         run: npm install --prefix examples/basic-storybook --ignore-scripts --no-audit --no-fund
 
+      - name: Verify authoritative lockfiles
+        run: git diff --exit-code -- package-lock.json examples/basic-storybook/package-lock.json
+
       - name: Validate package and integration contract
         run: npm run release:check
 
@@ -45,3 +48,47 @@ jobs:
 
       - name: Run cross-browser sandbox tests
         run: npm run test:browser
+
+  compatibility:
+    name: Compatibility (Node ${{ matrix.node }}, React ${{ matrix.react }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - node: 20.19.0
+            react: 18.3.1
+            react_types: 18.3.31
+            react_dom_types: 18.3.7
+          - node: 22.12.0
+            react: 19.2.8
+            react_types: 19.2.18
+            react_dom_types: 19.2.4
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Setup Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+
+      - name: Install locked dependencies
+        run: |
+          npm install --ignore-scripts --no-audit --no-fund
+          npm install --prefix examples/basic-storybook --ignore-scripts --no-audit --no-fund
+
+      - name: Verify authoritative lockfiles
+        run: git diff --exit-code -- package-lock.json examples/basic-storybook/package-lock.json
+
+      - name: Select React compatibility version
+        run: |
+          npm install --no-save --package-lock=false --ignore-scripts --no-audit --no-fund react@${{ matrix.react }} react-dom@${{ matrix.react }} @types/react@${{ matrix.react_types }} @types/react-dom@${{ matrix.react_dom_types }}
+          npm install --prefix examples/basic-storybook --no-save --package-lock=false --ignore-scripts --no-audit --no-fund react@${{ matrix.react }} react-dom@${{ matrix.react }}
+
+      - name: Verify package and local Storybook consumer
+        run: |
+          npm test
+          npm run build
+          npm run example:build
