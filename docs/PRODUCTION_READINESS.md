@@ -2,7 +2,7 @@
 
 Status: **alpha candidate; not production-ready**
 
-Last reviewed: 2026-08-20
+Last reviewed: 2026-08-21
 
 This roadmap defines the work and evidence required to move
 `storybook-live-code-sandbox` from its current alpha candidate to a supported
@@ -22,10 +22,10 @@ The package has a sound architectural foundation:
   synchronization have focused tests; and
 - the repository ships a governed, read-only Crossroads integration contract.
 
-Evidence verified during the 2026-08-20 review:
+Evidence verified through 2026-08-21:
 
-- 57 package unit tests passed;
-- 5 integration-contract tests passed;
+- 62 package unit tests passed;
+- 8 repository integration and consistency tests passed;
 - the package build passed;
 - the basic Storybook consumer build passed against the local package link;
 - desktop browser verification confirmed draft isolation, explicit Run,
@@ -33,6 +33,8 @@ Evidence verified during the 2026-08-20 review:
   alert;
 - two-tab browser verification confirmed debounced draft synchronization,
   executed-preview synchronization, and reload persistence;
+- 14 committed browser checks passed across Chromium, Firefox, WebKit, and an
+  exact 390 by 844 pixel Chromium mobile viewport;
 - package contents passed `npm pack --dry-run --ignore-scripts` with an isolated
   npm cache; and
 - the packed artifact contained the documented `dist`, README, license, and
@@ -43,15 +45,14 @@ request plus publication workflows now install and build the local-package
 Storybook consumer. The default npm cache still contains root-owned files, so
 release automation must continue to use a clean cache. Storybook reports an
 outdated JSX-transform warning in development and a chunk above 500 kB in the
-production build. The browser
-checks above are current manual evidence; checked-in cross-browser automation
-is still required.
+production build. Core browser evidence now runs from checked-in Playwright
+tests in pull-request, main, and publication validation.
 
 ## Production blockers
 
 ### P0: Explicit execution and truthful preview state
 
-Status: **implementation and initial browser verification complete; matrix open**
+Status: **implementation and core cross-browser verification complete; edge-case matrix open**
 
 The editor now keeps typed, pasted, inserted, restored, and transferred source
 as draft code until the user activates Run. Successful runs update the
@@ -63,8 +64,6 @@ Remaining outcome:
 - verify rapid edits during a run and scope changes; repeated runs and empty
   drafts have focused regression coverage;
 - confirm error announcements and focus behavior with assistive technology;
-- commit repeatable cross-browser tests for the verified Run and rollback
-  behavior; and
 - keep the documented `react-live` trust boundary visible in release notes.
 
 ### P0: Persistence and synchronization resilience
@@ -82,12 +81,11 @@ workspace; concurrent field-level merging is intentionally unsupported.
 
 Remaining outcome:
 
-- verify blocked storage and quota behavior in target browsers; and
-- add committed multi-context browser coverage for the conflict policy.
+- verify blocked storage and quota behavior in target browsers.
 
 ### P0: Default artifact accessibility
 
-Status: **fallback interaction implementation and unit coverage complete; rendered matrix open**
+Status: **fallback implementation and core rendered automation complete; human matrix open**
 
 The package-owned fallback UI must be production-capable without a design
 system adapter.
@@ -101,8 +99,10 @@ Required outcome:
   options;
 - the editor is named, diagnostics are polite status updates, failed runs are
   assertive notifications, and dialogs expose modal state; and
-- keyboard-only, zoom, reduced-motion, high-contrast, RTL, and dark-theme
-  behavior receive rendered verification.
+- keyboard-only behavior now runs in all three desktop engines; Chromium also
+  verifies reduced-motion, forced-color, RTL, and dark-theme preferences; and
+- browser zoom, assistive-technology announcements, and real-device behavior
+  still require human verification.
 
 ### P0: Version the asynchronous storage API
 
@@ -207,6 +207,8 @@ Exit gate: no open P0 defect and equivalent behavior across the default and
 adapted artifacts.
 
 ### Phase 2: Automated evidence
+
+Status: **core browser matrix landed locally; broader package and interaction matrix open**
 
 Add the unit, browser, package, and consumer verification described above.
 Wire stable checks into protected-branch CI.

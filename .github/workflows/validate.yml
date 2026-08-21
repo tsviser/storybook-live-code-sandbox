@@ -39,3 +39,9 @@ jobs:
 
       - name: Build local-package Storybook consumer
         run: npm run example:build
+
+      - name: Install browser test engines
+        run: npx playwright install --with-deps chromium firefox webkit
+
+      - name: Run cross-browser sandbox tests
+        run: npm run test:browser

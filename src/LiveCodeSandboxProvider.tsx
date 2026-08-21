@@ -152,10 +152,17 @@ export function LiveCodeSandboxProvider({
   const typingDirtyRef = useRef(false);
   const pendingInsertionRef = useRef<PendingInsertion>(null);
   const checkpointListRef = useRef<HTMLDivElement | null>(null);
+  const resetTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const settingsTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const typingCheckpointTimeoutRef = useRef<number | undefined>(undefined);
   const runIdRef = useRef(0);
   const activeStorageKeyRef = useRef(storageKey);
   const workspaceTabsId = useId();
   stateRef.current = state;
+
+  useEffect(() => {
+    return () => window.clearTimeout(typingCheckpointTimeoutRef.current);
+  }, []);
 
   useEffect(() => {
     if (activeStorageKeyRef.current === storageKey) return;
@@ -350,10 +357,13 @@ export function LiveCodeSandboxProvider({
   const finishTyping = useCallback(() => {
     if (!typingDirtyRef.current) return;
     typingDirtyRef.current = false;
-    setState((current) => ({
-      ...current,
-      checkpoints: addCheckpoint(current.checkpoints, { label: "Edited", code: current.code, cursor: current.cursor }, current.historyLimit),
-    }));
+    window.clearTimeout(typingCheckpointTimeoutRef.current);
+    typingCheckpointTimeoutRef.current = window.setTimeout(() => {
+      setState((current) => ({
+        ...current,
+        checkpoints: addCheckpoint(current.checkpoints, { label: "Edited", code: current.code, cursor: current.cursor }, current.historyLimit),
+      }));
+    }, 0);
   }, []);
 
   const insertText = useCallback((text: string, cursorOffset = text.length) => {
@@ -553,8 +563,8 @@ export function LiveCodeSandboxProvider({
             {managed && !hideWorkspaceOrientationAction ? <SandboxButton ariaLabel={`Use ${workspaceOrientation === "horizontal" ? "vertical" : "horizontal"} Code and Canvas layout`} icon={workspaceOrientation === "horizontal" ? "layout-vertical" : "layout-horizontal"} onClick={() => onWorkspaceOrientationChange?.(workspaceOrientation === "horizontal" ? "vertical" : "horizontal")} ui={ui}>Layout</SandboxButton> : null}
             {!hideFullscreenAction ? <SandboxButton ariaLabel={isFullscreen ? "Exit fullscreen" : "Fullscreen"} icon={isFullscreen ? "exit-fullscreen" : "fullscreen"} onClick={toggleFullscreen} ui={ui}>{isFullscreen ? "Exit fullscreen" : "Fullscreen"}</SandboxButton> : null}
             <span aria-orientation="vertical" className="sb-live-code-sandbox__actionDivider" role="separator" />
-            <SandboxButton ariaLabel="Reset" icon="reset" onClick={requestReset} tone="danger" ui={ui}>Reset</SandboxButton>
-            <SandboxButton ariaLabel="History settings" icon="settings" onClick={openSettings} ui={ui}>Settings</SandboxButton>
+            <SandboxButton ariaLabel="Reset" buttonRef={resetTriggerRef} icon="reset" onClick={requestReset} tone="danger" ui={ui}>Reset</SandboxButton>
+            <SandboxButton ariaLabel="History settings" buttonRef={settingsTriggerRef} icon="settings" onClick={openSettings} ui={ui}>Settings</SandboxButton>
             {toolbarActions}
           </div>
         </div>
@@ -661,6 +671,7 @@ export function LiveCodeSandboxProvider({
           onCancel={() => setResetOpen(false)}
           onConfirm={confirmReset}
           open={resetOpen}
+          returnFocusRef={resetTriggerRef}
           title="Reset sandbox?"
           ui={ui}
         ><span /></SandboxDialog>
@@ -671,6 +682,7 @@ export function LiveCodeSandboxProvider({
           onCancel={() => setSettingsOpen(false)}
           onConfirm={saveSettings}
           open={settingsOpen}
+          returnFocusRef={settingsTriggerRef}
           title="History settings"
           ui={ui}
         >

@@ -21,6 +21,7 @@ manifest and `package.json` disagree, so any version bump must update both in th
 
 ```sh
 npm test                  # vitest
+npm run test:browser      # local Storybook in Chromium, Firefox, WebKit, and 390 px Chromium
 npm run build             # vite library build + TypeScript declarations
 npm run integration:check # validate the Crossroads manifest and invalid fixtures
 npm run integration:test  # node:test suite around the validator
@@ -78,8 +79,9 @@ change.
 
 These findings remain review items, not implicit implementation authorization:
 
-1. Default-artifact keyboard behavior now has focused unit coverage; the rendered keyboard-only,
-   zoom, reduced-motion, forced-color, RTL, and dark-theme matrix remains open.
+1. Default-artifact keyboard behavior, reduced-motion, forced-color, RTL, dark-theme, and 390 px
+   mobile behavior now have committed browser coverage; browser zoom, assistive technology, and
+   real-device acceptance remain open.
 2. `crypto.randomUUID?.()` and `localStorage.setItem` are not fully guarded for environments such
    as non-secure contexts, Safari private mode, or storage quota exhaustion.
 3. The manifest declares fewer root-subpath symbols than `src/index.ts` exports. The validator

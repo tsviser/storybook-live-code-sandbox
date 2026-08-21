@@ -55,6 +55,7 @@ export type LiveCodeSandboxStorage = {
 };
 
 export type SandboxButtonProps = {
+  buttonRef?: React.Ref<HTMLButtonElement>;
   children: ReactNode;
   ariaLabel?: string;
   className?: string;
@@ -121,6 +122,7 @@ export type SandboxDialogProps = {
   onCancel: () => void;
   onConfirm: () => void;
   open: boolean;
+  returnFocusRef?: React.RefObject<HTMLElement | null>;
   title: ReactNode;
 };
 

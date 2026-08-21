@@ -173,7 +173,12 @@ Synchronization uses a last-arriving-valid-state-wins policy for the complete wo
 For a development checkout, run `npm run hooks:install` once. The tracked pre-push hook checks
 artifact metadata and workflow action pins before running the full release validation.
 
+Install the pinned browser engines once with
+`npx playwright install chromium firefox webkit`, then run
+`npm run test:browser` for the local Storybook matrix.
+
 1. Run `npm run release:check`.
-2. Install the generated tarball in a consuming Storybook.
-3. Complete manual desktop and mobile testing.
-4. Publish only after explicit approval. Do not combine validation with versioning or publication.
+2. Run `npm run test:browser`.
+3. Install the generated tarball in a consuming Storybook.
+4. Complete manual desktop and mobile testing.
+5. Publish only after explicit approval. Do not combine validation with versioning or publication.

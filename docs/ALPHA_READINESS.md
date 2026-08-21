@@ -31,12 +31,16 @@ production-readiness claim.
   accessible names, component search offered native suggestions and selected
   an exact option, arrow keys activated tabs, and the settings dialog trapped
   focus, closed with Escape, and restored focus to its trigger.
+- Committed Playwright automation: 14 checks passed across Chromium, Firefox,
+  WebKit, and an exact 390 by 844 pixel Chromium mobile viewport. The suite
+  covers explicit execution and rollback, fallback keyboard behavior, reload
+  persistence, two-page synchronization, mobile panel switching, and Chromium
+  dark, reduced-motion, forced-color, and RTL preferences.
 
 ## Remaining gates
 
 - Complete human testing on the target browsers and real mobile devices.
-- Complete rendered zoom, reduced-motion, forced-color, RTL, and dark-theme
-  verification across the supported browser matrix.
+- Complete human browser zoom, assistive-technology, and real-device checks.
 - Verify migration from an older storage payload; persistence across a browser
   reload passed in the basic Storybook consumer.
 - The provider-level channel path and last-arriving-valid-state conflict policy
@@ -51,8 +55,8 @@ production-readiness claim.
 - `react-live` evaluation limitations and the preview error model should be
   documented before a production stability claim.
 - Persistence failure behavior and last-arriving-state synchronization now
-  have focused tests; real-browser blocked-storage, quota, reload, and
-  multi-tab verification remain open.
+  have focused tests; real-browser blocked-storage and quota verification
+  remain open.
 - The manifest declares two symbols for the root subpath while `src/index.ts`
   exports sixteen. The validator compares subpaths only, so the gap passes.
 
@@ -64,6 +68,11 @@ production-readiness claim.
   navigation. The package also names the editor, separates polite diagnostics
   from assertive failures, uses logical layout properties, and provides system
   dark-mode and forced-color defaults.
+- A WebKit browser check exposed that click activation does not reliably focus
+  buttons. Dialogs now accept an explicit return-focus ref, and all supported
+  desktop engines verify Escape restoration. Typing checkpoint creation is
+  deferred until after the initiating pointer interaction so mobile panel tabs
+  do not move between pointerdown and click.
 
 - The `storage` subpath no longer imports the CodeMirror JSX parser at module
   scope. It was pulling a 441 kB chunk (the parser alone measures 343 kB
