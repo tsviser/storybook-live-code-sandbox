@@ -27,7 +27,14 @@ The previous publication path ran package tests twice and built the package five
 install, explicit release validation, dry-run packing, `prepublishOnly`, and final packing. CI now
 uses the repository's platform-safe `npm install` behavior with lifecycle scripts disabled. A
 clean `npm ci` is intentionally avoided because it has repeatedly failed to resolve this package's
-platform-specific native optional dependencies on Linux runners. The release dry run skips
+platform-specific native optional dependencies on Linux runners. Both lockfiles remain
+authoritative: validation and publication now fail if the platform-safe install changes either
+one. Lockfile-producing CI installs use pinned npm 10.9.4 because clean npm 11 installs on Ubuntu
+normalize optional native dependency metadata differently from macOS; the final publication step
+switches to pinned npm 11.6.0 for provenance publication. Floating `latest` development ranges
+were replaced with major-bounded ranges, and a focused Node 20/React 18 plus Node 22/React 19
+compatibility matrix verifies supported lower lines without duplicating the cross-browser suite.
+The release dry run skips
 lifecycle scripts after its explicit build, and the already-verified publish step also skips
 lifecycle scripts. The resulting publication job runs tests once and builds once, removing one
 test execution and four builds. The same install and dry-run changes remove two redundant builds

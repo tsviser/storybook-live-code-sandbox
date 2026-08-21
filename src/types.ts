@@ -89,7 +89,7 @@ export type SandboxSurfaceProps = {
   children: ReactNode;
   className: string;
   fullscreen: boolean;
-  surfaceRef: React.RefObject<HTMLElement | null>;
+  surfaceRef: { current: HTMLElement | null };
 };
 
 export type SandboxChipProps = {

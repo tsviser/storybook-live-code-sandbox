@@ -140,6 +140,19 @@ category identities, and prop metadata used to generate source.
 - `toolbarActions`: additional host-owned toolbar content.
 - `ui`: optional `LiveCodeSandboxUIAdapter`.
 
+## Supported versions
+
+- Node.js `20.19+` or `22.12+`; CI verifies Node 20.19, 22.12, and 24.
+- npm 10 or 11.
+- React and React DOM 18 or 19, with matching major versions.
+- Storybook 10.x.
+- Current Playwright Chromium, Firefox, and WebKit engines used by this repository.
+
+The package and basic consumer lockfiles are authoritative. CI uses the
+repository's platform-safe `npm install --ignore-scripts` workflow with a
+pinned npm 10 release and fails if installation changes either lockfile. The
+publish step switches to a pinned npm 11 release for provenance publication.
+
 Typing checkpoints on blur, paste checkpoints immediately, and story-source transfers checkpoint immediately. Reset remains in the dedicated view and clears code, history, undo/redo state, insertion progress, selection, and pending typing.
 
 ## Execution Model

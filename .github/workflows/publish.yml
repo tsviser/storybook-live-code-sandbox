@@ -10,6 +10,10 @@ permissions:
   contents: read
   id-token: write
 
+env:
+  INSTALL_NPM_VERSION: 10.9.4
+  PUBLISH_NPM_VERSION: 11.6.0
+
 jobs:
   publish:
     runs-on: ubuntu-latest
@@ -28,11 +32,17 @@ jobs:
       - name: Check repository consistency
         run: node scripts/check-consistency.mjs --all
 
+      - name: Select deterministic install npm
+        run: npm install --global npm@${INSTALL_NPM_VERSION} --ignore-scripts --no-audit --no-fund
+
       - name: Install dependencies
         run: npm install --ignore-scripts --no-audit --no-fund
 
       - name: Install basic Storybook example
         run: npm install --prefix examples/basic-storybook --ignore-scripts --no-audit --no-fund
+
+      - name: Verify authoritative lockfiles
+        run: git diff --exit-code -- package-lock.json examples/basic-storybook/package-lock.json
 
       - name: Verify package
         run: npm run release:check
@@ -45,6 +55,9 @@ jobs:
 
       - name: Run cross-browser sandbox tests
         run: npm run test:browser
+
+      - name: Select provenance-capable publish npm
+        run: npm install --global npm@${PUBLISH_NPM_VERSION} --ignore-scripts --no-audit --no-fund
 
       - name: Publish to npm
         run: npm publish --ignore-scripts --provenance --access public
