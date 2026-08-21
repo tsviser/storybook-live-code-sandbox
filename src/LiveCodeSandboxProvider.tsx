@@ -3,7 +3,7 @@ import { EditorSelection } from "@codemirror/state";
 import type { EditorView } from "@codemirror/view";
 import { LiveContext, LiveError, LivePreview, LiveProvider } from "react-live";
 import * as React from "react";
-import { useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useContext, useEffect, useId, useMemo, useRef, useState } from "react";
 import { LiveCodeEditor, type EditorChangeKind } from "./LiveCodeEditor";
 import { SandboxRegistry, type RegistryTab } from "./SandboxRegistry";
 import {
@@ -154,6 +154,7 @@ export function LiveCodeSandboxProvider({
   const checkpointListRef = useRef<HTMLDivElement | null>(null);
   const runIdRef = useRef(0);
   const activeStorageKeyRef = useRef(storageKey);
+  const workspaceTabsId = useId();
   stateRef.current = state;
 
   useEffect(() => {
@@ -586,7 +587,11 @@ export function LiveCodeSandboxProvider({
             setActiveWorkspaceTab(value);
             if (managed && value === "components") setRegistryOpen(true);
           }}
-          tabs={[{ label: "Components", value: "components" }, { label: "Code", value: "code" }, { label: "Preview", value: "preview" }]}
+          tabs={[
+            { id: `${workspaceTabsId}-components-tab`, label: "Components", panelId: `${workspaceTabsId}-components-panel`, value: "components" },
+            { id: `${workspaceTabsId}-code-tab`, label: "Code", panelId: `${workspaceTabsId}-code-panel`, value: "code" },
+            { id: `${workspaceTabsId}-preview-tab`, label: "Preview", panelId: `${workspaceTabsId}-preview-panel`, value: "preview" },
+          ]}
           ui={ui}
           value={activeWorkspaceTab}
         />
@@ -608,10 +613,11 @@ export function LiveCodeSandboxProvider({
             onTabChange={setActiveRegistryTab}
             registry={registry}
             selectedItem={selectedItem}
+            workspacePanelId={`${workspaceTabsId}-components-panel`}
             ui={ui}
             usedPropNames={usedPropNames}
           />,
-            editor: <div className="sb-live-code-sandbox__editorPane">
+            editor: <div aria-label="Composition code" className="sb-live-code-sandbox__editorPane" id={`${workspaceTabsId}-code-panel`} role="tabpanel">
             <LiveCodeEditor
               cursor={state.cursor}
               onBlur={finishTyping}
@@ -632,9 +638,9 @@ export function LiveCodeSandboxProvider({
               </button>
             ) : null}
           </div>,
-            preview: <div className="sb-live-code-sandbox__preview" aria-label="Composition preview" onClick={() => {
+            preview: <div aria-label="Composition preview" className="sb-live-code-sandbox__preview" id={`${workspaceTabsId}-preview-panel`} onClick={() => {
               if (managed && !state.code.trim()) setRegistryOpen(true);
-            }}>
+            }} role="tabpanel">
             <LiveProvider code={pendingRun?.previewCode ?? getPreviewCode(state.lastSuccessfulCode)} scope={liveScope} noInline={false}>
               <RuntimeErrorReporter onError={(message) => {
                 if (!pendingRun) setNotice({ message: `Preview could not render: ${message}`, tone: "warning" });
@@ -643,7 +649,7 @@ export function LiveCodeSandboxProvider({
               <LivePreview />
               <LiveError role="alert" />
             </LiveProvider>
-            {diagnostics ? <p className="sb-live-code-sandbox__diagnostic">{diagnostics}</p> : null}
+            {diagnostics ? <p aria-live="polite" className="sb-live-code-sandbox__diagnostic" role="status">{diagnostics}</p> : null}
           </div>
           })}
         </div>

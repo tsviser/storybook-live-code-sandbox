@@ -144,6 +144,14 @@ The default artifact uses the package's accessible fallback controls:
 import { defaultLiveCodeSandboxArtifact } from "storybook-live-code-sandbox/artifacts/default";
 ```
 
+The fallback dialogs trap focus, close with Escape, and return focus to the
+control that opened them. Fallback tabs use roving focus with arrow, Home, and
+End keys and expose their associated panels. Component search offers the
+registered component names as native suggestions. The package styles use
+logical layout properties and provide system dark-mode and forced-color
+defaults; adapters remain responsible for equivalent behavior in replacement
+controls.
+
 Design systems can supply render functions for buttons, chips, fields, tabs, dialogs, notifications, and the root surface. The Crossroads export applies the artifact identity while receiving components through an adapter, avoiding a package dependency cycle:
 
 ```ts

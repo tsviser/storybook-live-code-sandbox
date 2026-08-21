@@ -103,7 +103,13 @@ export type SandboxTabsProps = {
   ariaLabel: string;
   className?: string;
   onChange: (value: string) => void;
-  tabs: Array<{ disabled?: boolean; label: string; value: string }>;
+  tabs: Array<{
+    disabled?: boolean;
+    id?: string;
+    label: string;
+    panelId?: string;
+    value: string;
+  }>;
   value: string;
 };
 

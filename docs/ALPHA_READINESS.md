@@ -6,8 +6,8 @@ production-readiness claim.
 
 ## Evidence completed
 
-- Package unit tests: 57 passed.
-- Integration-contract tests: 5 passed.
+- Package unit tests: 62 passed.
+- Repository integration and consistency tests: 8 passed.
 - Package build: passed.
 - Release check and `npm pack --dry-run`: passed.
 - Mounted provider synchronization test: passed for a Storybook channel
@@ -27,10 +27,16 @@ production-readiness claim.
   passed.
 - Responsive browser smoke test at 390x844: workspace tabs, component search,
   component cards, and reset/settings controls remained visible and usable.
+- Default-artifact browser verification: the editor and tab panels exposed
+  accessible names, component search offered native suggestions and selected
+  an exact option, arrow keys activated tabs, and the settings dialog trapped
+  focus, closed with Escape, and restored focus to its trigger.
 
 ## Remaining gates
 
 - Complete human testing on the target browsers and real mobile devices.
+- Complete rendered zoom, reduced-motion, forced-color, RTL, and dark-theme
+  verification across the supported browser matrix.
 - Verify migration from an older storage payload; persistence across a browser
   reload passed in the basic Storybook consumer.
 - The provider-level channel path and last-arriving-valid-state conflict policy
@@ -44,11 +50,6 @@ production-readiness claim.
   example dev server startup.
 - `react-live` evaluation limitations and the preview error model should be
   documented before a production stability claim.
-- The default UI artifact is thinner than the adapted path it is tested
-  through: its search field ignores `options` and `onOptionSelect`, its dialog
-  has no focus trap, Escape handling, or focus restoration, and its tabs have
-  no `aria-controls` or arrow-key navigation. Cover the default artifact with
-  its own tests before claiming accessibility parity.
 - Persistence failure behavior and last-arriving-state synchronization now
   have focused tests; real-browser blocked-storage, quota, reload, and
   multi-tab verification remain open.
@@ -56,6 +57,13 @@ production-readiness claim.
   exports sixteen. The validator compares subpaths only, so the gap passes.
 
 ## Resolved follow-ups
+
+- The default artifact now has focused tests for native search selection,
+  instance-unique dialog labeling, modal focus handling, Escape and focus
+  restoration, associated tab panels, roving focus, and LTR/RTL arrow-key
+  navigation. The package also names the editor, separates polite diagnostics
+  from assertive failures, uses logical layout properties, and provides system
+  dark-mode and forced-color defaults.
 
 - The `storage` subpath no longer imports the CodeMirror JSX parser at module
   scope. It was pulling a 441 kB chunk (the parser alone measures 343 kB

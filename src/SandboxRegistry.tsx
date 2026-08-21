@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useId, useMemo, useState } from "react";
 import type { LiveCodeRegistryItem, LiveCodeRegistryProp, LiveCodeSandboxUIAdapter } from "./types";
 import { getStringLiteralOptions } from "./editorState";
 import { SandboxButton, SandboxChip, SandboxField, SandboxTabs } from "./ui";
@@ -14,6 +14,7 @@ type SandboxRegistryProps = {
   selectedItem: LiveCodeRegistryItem | null;
   ui?: LiveCodeSandboxUIAdapter;
   usedPropNames: string[];
+  workspacePanelId?: string;
   onCategoryChange: (category: string) => void;
   onFilterChange: (filter: string) => void;
   onInsert: (item: LiveCodeRegistryItem) => void;
@@ -69,6 +70,7 @@ export function SandboxRegistry({
   selectedItem,
   ui,
   usedPropNames,
+  workspacePanelId,
   onCategoryChange,
   onFilterChange,
   onInsert,
@@ -79,6 +81,7 @@ export function SandboxRegistry({
   onTabChange,
 }: SandboxRegistryProps) {
   const [activeValueProp, setActiveValueProp] = useState<string | null>(null);
+  const tabsId = useId();
   const visualRegistry = useMemo(
     () => registry.filter((item) => item.sandboxVisible !== false && !item.disabledReason),
     [registry],
@@ -119,15 +122,15 @@ export function SandboxRegistry({
     : [];
 
   return (
-    <aside className="sb-live-code-sandbox__registry" aria-label="Sandbox sidebar">
+    <aside aria-label="Sandbox sidebar" className="sb-live-code-sandbox__registry" id={workspacePanelId} role={workspacePanelId ? "tabpanel" : undefined}>
       <div className="sb-live-code-sandbox__registryHeader">
         <SandboxTabs
           ariaLabel="Sandbox sidebar views"
           className="sb-live-code-sandbox__sideTabs"
           onChange={(value) => onTabChange(value as RegistryTab)}
           tabs={[
-            { label: "Components", value: "components" },
-            { disabled: !selectedItem, label: "Props", value: "props" },
+            { id: `${tabsId}-components-tab`, label: "Components", panelId: `${tabsId}-components-panel`, value: "components" },
+            { disabled: !selectedItem, id: `${tabsId}-props-tab`, label: "Props", panelId: `${tabsId}-props-panel`, value: "props" },
           ]}
           ui={ui}
           value={activeTab}
@@ -156,7 +159,7 @@ export function SandboxRegistry({
         ) : null}
       </div>
       {activeTab === "components" ? (
-        <>
+        <div aria-labelledby={`${tabsId}-components-tab`} className="sb-live-code-sandbox__registryTabPanel" id={`${tabsId}-components-panel`} role="tabpanel">
           <SandboxField
             ariaLabel="Search components"
             onChange={onFilterChange}
@@ -211,9 +214,9 @@ export function SandboxRegistry({
             ))}
             {visibleItems.length === 0 ? <p className="sb-live-code-sandbox__empty">No visual components found.</p> : null}
           </div>
-        </>
+        </div>
       ) : (
-        <div className="sb-live-code-sandbox__propSuggestions" aria-label={`${selectedItem?.name ?? "Component"} prop suggestions`}>
+        <div aria-label={`${selectedItem?.name ?? "Component"} prop suggestions`} className="sb-live-code-sandbox__propSuggestions sb-live-code-sandbox__registryTabPanel" id={`${tabsId}-props-panel`} role="tabpanel">
           <strong>{selectedItem?.name} props</strong>
           {suggestedProps.length ? (
             <div className="sb-live-code-sandbox__propList">

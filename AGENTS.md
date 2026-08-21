@@ -78,9 +78,8 @@ change.
 
 These findings remain review items, not implicit implementation authorization:
 
-1. The default UI artifact is weaker than the adapted path its tests run through. `SandboxField`'s
-   fallback ignores `options` and `onOptionSelect`; `SandboxDialog` lacks focus trapping, Escape
-   handling, and focus restoration; `SandboxTabs` lacks `aria-controls` and arrow-key navigation.
+1. Default-artifact keyboard behavior now has focused unit coverage; the rendered keyboard-only,
+   zoom, reduced-motion, forced-color, RTL, and dark-theme matrix remains open.
 2. `crypto.randomUUID?.()` and `localStorage.setItem` are not fully guarded for environments such
    as non-secure contexts, Safari private mode, or storage quota exhaustion.
 3. The manifest declares fewer root-subpath symbols than `src/index.ts` exports. The validator
@@ -89,7 +88,7 @@ These findings remain review items, not implicit implementation authorization:
    toolbar actions.
 5. The `storybook` peer range may be unnecessarily narrow because the source uses structural
    channel typing rather than importing Storybook directly.
-6. `docs/ALPHA_READINESS.md` still records open alpha-stability and accessibility gates.
+6. `docs/ALPHA_READINESS.md` still records open alpha-stability and rendered accessibility-matrix gates.
 
 Investigate and propose before implementing. Source edits, dependency changes, publishing, releases,
 and external mutations require explicit authorization.
