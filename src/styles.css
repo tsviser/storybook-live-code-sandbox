@@ -28,6 +28,7 @@
   --sb-sandbox-primary: #111827;
   --sb-sandbox-on-primary: #ffffff;
   --sb-sandbox-danger: #b42318;
+  color-scheme: light dark;
   position: relative;
   display: grid;
   grid-template-rows: auto auto minmax(0, 1fr);
@@ -164,13 +165,20 @@
 
 .sb-live-code-sandbox__registry {
   display: grid;
-  grid-template-rows: auto auto auto minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr);
   align-content: start;
   gap: 10px;
   min-width: 0;
   min-height: 0;
   padding: 12px;
-  border-right: 1px solid var(--sb-sandbox-border);
+  border-inline-end: 1px solid var(--sb-sandbox-border);
+}
+.sb-live-code-sandbox__registryTabPanel {
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr);
+  align-content: start;
+  gap: 10px;
+  min-height: 0;
 }
 
 .sb-live-code-sandbox__registryHeader {
@@ -235,7 +243,7 @@
   block-size: auto;
   gap: 3px;
   min-block-size: 0;
-  text-align: left;
+  text-align: start;
   white-space: normal;
 }
 .sb-live-code-sandbox__registryList > button.is-unavailable { border-style: dashed; color: var(--sb-sandbox-muted); }
@@ -252,7 +260,7 @@
   font-weight: var(--cr-font-weight-regular, 400);
 }
 
-.sb-live-code-sandbox__editorPane { position: relative; min-width: 0; min-height: 0; overflow: auto; border-right: 1px solid var(--sb-sandbox-border); }
+.sb-live-code-sandbox__editorPane { position: relative; min-width: 0; min-height: 0; overflow: auto; border-inline-end: 1px solid var(--sb-sandbox-border); }
 .sb-live-code-sandbox__editorHost { min-height: 100%; }
 .sb-live-code-sandbox__editorEmpty {
   position: absolute;
@@ -275,7 +283,7 @@
 
 .sb-live-code-sandbox__toast {
   position: absolute;
-  right: 16px;
+  inset-inline-end: 16px;
   bottom: 16px;
   z-index: 3;
   display: flex;
@@ -297,6 +305,36 @@
 .sb-live-code-sandbox__dialog > div:last-child { display: flex; justify-content: flex-end; gap: 8px; }
 .sb-live-code-sandbox__settingsFields { display: grid !important; justify-content: stretch !important; gap: 12px !important; }
 .sb-live-code-sandbox__settingsFields > div { display: grid; grid-template-columns: auto minmax(72px, 120px) auto; align-items: center; gap: 8px; }
+
+@media (prefers-color-scheme: dark) {
+  .sb-live-code-sandbox:not(.sb-live-code-sandbox--crossroads) {
+    --sb-sandbox-bg: #111827;
+    --sb-sandbox-surface: #1f2937;
+    --sb-sandbox-text: #f9fafb;
+    --sb-sandbox-muted: #cbd5e1;
+    --sb-sandbox-border: rgba(255, 255, 255, 0.24);
+    --sb-sandbox-primary: #f9fafb;
+    --sb-sandbox-on-primary: #111827;
+    --sb-sandbox-danger: #fda4af;
+  }
+}
+
+@media (forced-colors: active) {
+  .sb-live-code-sandbox:not(.sb-live-code-sandbox--crossroads) {
+    --sb-sandbox-bg: Canvas;
+    --sb-sandbox-surface: Canvas;
+    --sb-sandbox-text: CanvasText;
+    --sb-sandbox-muted: CanvasText;
+    --sb-sandbox-border: CanvasText;
+    --sb-sandbox-primary: Highlight;
+    --sb-sandbox-on-primary: HighlightText;
+    --sb-sandbox-danger: LinkText;
+  }
+  .sb-live-code-sandbox:not(.sb-live-code-sandbox--crossroads) button:focus-visible,
+  .sb-live-code-sandbox:not(.sb-live-code-sandbox--crossroads) input:focus-visible {
+    outline-color: Highlight;
+  }
+}
 
 .sb-live-code-sandbox--crossroads {
   --sb-sandbox-bg: var(--cr-color-background, #ffffff);

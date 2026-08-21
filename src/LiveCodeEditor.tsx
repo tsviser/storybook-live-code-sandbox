@@ -61,6 +61,7 @@ export function LiveCodeEditor({
       keymap.of([...historyKeymap, indentWithTab]),
       editorTheme,
       EditorView.lineWrapping,
+      EditorView.contentAttributes.of({ "aria-label": "Composition code editor" }),
       EditorView.domEventHandlers({ blur: () => onBlurRef.current?.() }),
       EditorView.updateListener.of((update) => {
         if (!update.docChanged && !update.selectionSet) return;

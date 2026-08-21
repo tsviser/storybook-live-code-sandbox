@@ -87,17 +87,20 @@ Remaining outcome:
 
 ### P0: Default artifact accessibility
 
+Status: **fallback interaction implementation and unit coverage complete; rendered matrix open**
+
 The package-owned fallback UI must be production-capable without a design
 system adapter.
 
 Required outcome:
 
-- dialogs trap focus, close with Escape, restore focus, and use instance-unique
-  accessible IDs;
-- tabs expose associated panels, roving focus, and arrow-key navigation;
-- the fallback search field supports the documented option-selection behavior;
-- editor, preview, diagnostics, notifications, and modal state are announced
-  appropriately; and
+- dialogs now trap focus, close with Escape, restore focus, and use
+  instance-unique accessible IDs;
+- tabs now expose associated panels, roving focus, and arrow-key navigation;
+- the fallback search field now offers and selects registered component
+  options;
+- the editor is named, diagnostics are polite status updates, failed runs are
+  assertive notifications, and dialogs expose modal state; and
 - keyboard-only, zoom, reduced-motion, high-contrast, RTL, and dark-theme
   behavior receive rendered verification.
 
