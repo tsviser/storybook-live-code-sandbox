@@ -6,8 +6,8 @@ production-readiness claim.
 
 ## Evidence completed
 
-- Package unit tests: 65 passed.
-- Repository integration and consistency tests: 8 passed.
+- Package unit tests: 71 passed.
+- Repository integration and consistency tests: 9 passed.
 - Package build: passed.
 - Release check and `npm pack --dry-run`: passed.
 - Mounted provider synchronization test: passed for a Storybook channel
@@ -31,7 +31,7 @@ production-readiness claim.
   accessible names, component search offered native suggestions and selected
   an exact option, arrow keys activated tabs, and the settings dialog trapped
   focus, closed with Escape, and restored focus to its trigger.
-- Committed Playwright automation: 29 checks passed across Chromium, Firefox,
+- Committed Playwright automation: 30 checks passed across Chromium, Firefox,
   WebKit, and an exact 390 by 844 pixel Chromium mobile viewport. The suite
   covers explicit execution and rollback, fallback keyboard behavior, reload
   persistence, two-page synchronization, blocked and quota-limited storage,
@@ -59,11 +59,17 @@ production-readiness claim.
   focused tests. Chromium, Firefox, and WebKit now run deterministic blocked
   storage and quota-failure checks; browser-policy-specific private modes
   remain a manual release-candidate check.
-- The manifest declares two symbols for the root subpath while `src/index.ts`
-  exports sixteen. The validator compares subpaths only, so the gap passes.
 
 ## Resolved follow-ups
 
+- Selectable registry entries now cross a fail-closed validation boundary for
+  unique identities, runtime scope membership, safe insertable examples,
+  category consistency, and generated prop metadata. Invalid entries are
+  hidden with an accessible warning and structured diagnostics are exported.
+- Registry documentation now matches the default-visible `sandboxVisible`
+  behavior and the `disabledReason` exclusion contract.
+- Integration validation now compares every manifest symbol with generated
+  declaration exports, closing the former root-export inventory gap.
 - Clipboard and Fullscreen API failures now produce actionable warning alerts
   instead of false success or unhandled promise rejections. Managed workspaces
   render the Layout action only when an orientation-change callback exists.

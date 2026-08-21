@@ -115,7 +115,14 @@ export type LiveCodeRegistryItem = {
 };
 ```
 
-Only entries with `sandboxVisible: true` appear. Categories create single-select filters; categories with fewer than three visible components are combined under `Other`. Props are ordered required, high, normal, advanced, then alphabetically.
+Entries appear unless `sandboxVisible` is `false` or `disabledReason` is set. Categories create single-select filters; categories with fewer than three visible components are combined under `Other`. Props are ordered required, high, normal, advanced, then alphabetically.
+
+The provider validates selectable entries against the runtime scope before
+rendering them. Invalid entries fail closed and produce an accessible warning.
+Use `validateLiveCodeRegistry(registry, scope)` to inspect structured issues in
+build tooling or tests. Validation covers unique item and example names,
+runtime scope membership, insertable and non-ambient examples, consistent
+category identities, and prop metadata used to generate source.
 
 ## Configuration
 

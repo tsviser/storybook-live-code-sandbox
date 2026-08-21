@@ -34,6 +34,7 @@ import type {
   LiveCodeSandboxStorage,
 } from "./types";
 import { getLiveCodeSandboxSyncEvent } from "./events";
+import { validateLiveCodeRegistry } from "./registryValidation";
 import { SandboxButton, SandboxChip, SandboxDialog, SandboxField, SandboxNotification, SandboxSurface, SandboxTabs } from "./ui";
 import "./styles.css";
 
@@ -116,6 +117,15 @@ export function LiveCodeSandboxProvider({
   ui,
   workspaceOrientation = "horizontal",
 }: LiveCodeSandboxProviderProps) {
+  const registryIssues = useMemo(() => validateLiveCodeRegistry(registry, scope), [registry, scope]);
+  const invalidRegistryIndexes = useMemo(
+    () => new Set(registryIssues.map((issue) => issue.itemIndex)),
+    [registryIssues],
+  );
+  const validatedRegistry = useMemo(
+    () => registry.filter((_, index) => !invalidRegistryIndexes.has(index)),
+    [invalidRegistryIndexes, registry],
+  );
   const [initialStorageResult] = useState(() =>
     readSandboxStorage(storageKey, initialCode, checkpointInterval, historyLimit));
   const [state, setState] = useState<LiveCodeSandboxStorage>(initialStorageResult.state);
@@ -163,6 +173,15 @@ export function LiveCodeSandboxProvider({
   useEffect(() => {
     return () => window.clearTimeout(typingCheckpointTimeoutRef.current);
   }, []);
+
+  useEffect(() => {
+    if (!registryIssues.length) return;
+    const hiddenCount = invalidRegistryIndexes.size;
+    setNotice({
+      message: `Sandbox registry hid ${hiddenCount} invalid component ${hiddenCount === 1 ? "entry" : "entries"}.`,
+      tone: "warning",
+    });
+  }, [invalidRegistryIndexes, registryIssues]);
 
   useEffect(() => {
     if (activeStorageKeyRef.current === storageKey) return;
@@ -641,7 +660,7 @@ export function LiveCodeSandboxProvider({
             onPinnedChange={managed ? (pinned) => { setRegistryPinned(pinned); setRegistryOpen(true); } : undefined}
             pinned={registryPinned}
             onTabChange={setActiveRegistryTab}
-            registry={registry}
+            registry={validatedRegistry}
             selectedItem={selectedItem}
             workspacePanelId={`${workspaceTabsId}-components-panel`}
             ui={ui}

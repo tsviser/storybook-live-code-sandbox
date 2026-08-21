@@ -53,7 +53,11 @@ export const liveCodeRegistry: LiveCodeRegistryItem[] = [
 ];
 ```
 
-Only items with `sandboxVisible: true` are shown.
+Items are shown unless `sandboxVisible` is `false` or `disabledReason` is set.
+Selectable items must have unique names, exist in the runtime scope, and expose
+at least one safe, insertable example. Invalid items are hidden with a warning;
+`validateLiveCodeRegistry(registry, scope)` returns structured diagnostics for
+build tooling and tests.
 
 ## 4. Add One Sandbox Story
 

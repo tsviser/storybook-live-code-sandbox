@@ -23,3 +23,16 @@ const meta = {
 
 export default meta;
 export const Workspace: StoryObj<typeof meta> = {};
+export const InvalidRegistry: StoryObj<typeof meta> = {
+  render: () => (
+    <LiveCodeSandboxProvider
+      registry={[
+        liveCodeRegistry[0],
+        { name: "Missing", examples: [{ name: "Missing", code: "<Missing />" }] },
+        { name: "Unsafe", examples: [{ name: "Unsafe", code: "<Button />; window.alert('no')" }] },
+      ]}
+      scope={liveCodeScope}
+      storageKey="basic-storybook-invalid-registry"
+    />
+  ),
+};

@@ -24,8 +24,8 @@ The package has a sound architectural foundation:
 
 Evidence verified through 2026-08-21:
 
-- 65 package unit tests passed;
-- 8 repository integration and consistency tests passed;
+- 71 package unit tests passed;
+- 9 repository integration and consistency tests passed;
 - the package build passed;
 - the basic Storybook consumer build passed against the local package link;
 - desktop browser verification confirmed draft isolation, explicit Run,
@@ -33,7 +33,7 @@ Evidence verified through 2026-08-21:
   alert;
 - two-tab browser verification confirmed debounced draft synchronization,
   executed-preview synchronization, and reload persistence;
-- 29 committed browser checks passed across Chromium, Firefox, WebKit, and an
+- 30 committed browser checks passed across Chromium, Firefox, WebKit, and an
   exact 390 by 844 pixel Chromium mobile viewport;
 - package contents passed `npm pack --dry-run --ignore-scripts` with an isolated
   npm cache; and
@@ -128,11 +128,13 @@ Complete these items before the production release candidate:
    `onWorkspaceOrientationChange`; no no-op Layout action is rendered.
 2. **Complete:** clipboard and Fullscreen API failures report useful,
    accessible feedback and do not escape as unhandled promises.
-3. Validate registry uniqueness, scope membership, insertable examples,
-   category identity, and prop metadata used to generate source.
-4. Compare integration-manifest symbols with generated declaration exports,
-   not only package subpaths.
-5. Align README visibility language with the actual `sandboxVisible` default.
+3. **Complete:** registry validation fails closed for duplicate identities,
+   missing scope members, unsafe or non-insertable examples, inconsistent
+   categories, and invalid prop metadata used to generate source.
+4. **Complete:** integration-manifest symbols are compared with generated
+   declaration exports for every typed public subpath.
+5. **Complete:** README visibility language matches the actual default-visible
+   behavior of `sandboxVisible` and the unavailable-entry contract.
 6. Decide and verify the supported Storybook, React, React DOM, browser, and
    Node ranges.
 7. Use reproducible CI installation and keep the lockfile authoritative.

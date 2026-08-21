@@ -11,6 +11,21 @@ const isObject = (value) => value !== null && typeof value === "object" && !Arra
 const isNonEmptyString = (value) => typeof value === "string" && value.trim().length > 0;
 const fail = (errors, message) => errors.push(message);
 
+function declarationExports(file) {
+  const source = fs.readFileSync(file, "utf8");
+  const symbols = new Set();
+  for (const match of source.matchAll(/(?:^|\n)\s*export\s+(?:type\s+)?\{([^}]+)\}/gs)) {
+    for (const item of match[1].split(",")) {
+      const name = item.trim().split(/\s+as\s+/).at(-1)?.trim();
+      if (name) symbols.add(name);
+    }
+  }
+  for (const match of source.matchAll(/(?:^|\n)\s*export\s+(?:declare\s+)?(?:const|let|var|function|class|interface|type|enum)\s+([A-Za-z_$][\w$]*)/g)) {
+    symbols.add(match[1]);
+  }
+  return symbols;
+}
+
 function resolveLocalPointer(pointer) {
   if (!isNonEmptyString(pointer) || /^https?:\/\//.test(pointer)) return true;
   const match = /^(.*):(\d+)$/.exec(pointer);
@@ -60,6 +75,9 @@ export function validateManifest(manifest, { packageJson = readJson(path.join(ro
     }
     if (declaredSubpaths.has(entry.subpath)) fail(errors, `duplicate public export ${entry.subpath}`);
     declaredSubpaths.add(entry.subpath);
+    const duplicateSymbols = entry.symbols.filter((symbol, index) => entry.symbols.indexOf(symbol) !== index);
+    if (entry.symbols.some((symbol) => !isNonEmptyString(symbol))) fail(errors, `public export ${entry.subpath} contains an invalid symbol`);
+    if (duplicateSymbols.length) fail(errors, `public export ${entry.subpath} contains duplicate symbols: ${[...new Set(duplicateSymbols)].join(", ")}`);
   }
   const packageExports = Object.keys(packageJson.exports ?? {});
   for (const subpath of packageExports) {
@@ -67,6 +85,27 @@ export function validateManifest(manifest, { packageJson = readJson(path.join(ro
   }
   for (const subpath of declaredSubpaths) {
     if (!Object.hasOwn(packageJson.exports ?? {}, subpath)) fail(errors, `manifest declares unknown public export: ${subpath}`);
+  }
+  for (const entry of declared ?? []) {
+    if (!isObject(entry) || !isNonEmptyString(entry.subpath) || !Array.isArray(entry.symbols)) continue;
+    const packageExport = packageJson.exports?.[entry.subpath];
+    const typesTarget = isObject(packageExport) && isNonEmptyString(packageExport.types)
+      ? path.resolve(root, packageExport.types)
+      : null;
+    if (!typesTarget) {
+      if (entry.symbols.length) fail(errors, `public export ${entry.subpath} declares symbols without a declaration file`);
+      continue;
+    }
+    if (!fs.existsSync(typesTarget)) {
+      fail(errors, `declaration file missing for public export ${entry.subpath}: ${path.relative(root, typesTarget)}`);
+      continue;
+    }
+    const generatedSymbols = declarationExports(typesTarget);
+    const declaredSymbols = new Set(entry.symbols);
+    const missing = [...generatedSymbols].filter((symbol) => !declaredSymbols.has(symbol)).sort();
+    const stale = [...declaredSymbols].filter((symbol) => !generatedSymbols.has(symbol)).sort();
+    if (missing.length) fail(errors, `public export ${entry.subpath} is missing generated symbols: ${missing.join(", ")}`);
+    if (stale.length) fail(errors, `public export ${entry.subpath} declares stale symbols: ${stale.join(", ")}`);
   }
 
   if (!isObject(manifest.boundaries)) fail(errors, "boundaries must be an object");
