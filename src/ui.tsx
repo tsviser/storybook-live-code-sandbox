@@ -12,7 +12,7 @@ import type {
 
 export function SandboxButton({ ui, ...props }: SandboxButtonProps & { ui?: LiveCodeSandboxUIAdapter }) {
   if (ui?.renderButton) return ui.renderButton(props);
-  return <button type="button" aria-label={props.ariaLabel} className={props.className} disabled={props.disabled} data-tone={props.tone} onClick={props.onClick}>{props.children}</button>;
+  return <button type="button" aria-label={props.ariaLabel} className={props.className} disabled={props.disabled} data-tone={props.tone} onClick={props.onClick} ref={props.buttonRef}>{props.children}</button>;
 }
 
 export function SandboxSurface({ ui, ...props }: SandboxSurfaceProps & { ui?: LiveCodeSandboxUIAdapter }) {
@@ -132,9 +132,9 @@ export function SandboxDialog({ ui, ...props }: SandboxDialogProps & { ui?: Live
 
   useEffect(() => {
     if (ui?.renderDialog || !props.open) return undefined;
-    previouslyFocusedRef.current = document.activeElement instanceof HTMLElement
-      ? document.activeElement
-      : null;
+    previouslyFocusedRef.current = props.returnFocusRef?.current ?? (
+      document.activeElement instanceof HTMLElement ? document.activeElement : null
+    );
     const dialog = dialogRef.current;
     const focusable = () => Array.from(dialog?.querySelectorAll<HTMLElement>(
       'button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [href], [tabindex]:not([tabindex="-1"])',
@@ -169,7 +169,7 @@ export function SandboxDialog({ ui, ...props }: SandboxDialogProps & { ui?: Live
       document.removeEventListener("keydown", onKeyDown);
       previouslyFocusedRef.current?.focus();
     };
-  }, [props.open, ui?.renderDialog]);
+  }, [props.open, props.returnFocusRef, ui?.renderDialog]);
 
   if (ui?.renderDialog) return ui.renderDialog(props);
   if (!props.open) return null;

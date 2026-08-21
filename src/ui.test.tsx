@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { SandboxDialog, SandboxField, SandboxTabs } from "./ui";
 
@@ -9,9 +9,10 @@ describe("default sandbox UI", () => {
     const user = userEvent.setup();
     function Harness() {
       const [open, setOpen] = useState(false);
+      const triggerRef = useRef<HTMLButtonElement | null>(null);
       return (
         <>
-          <button onClick={() => setOpen(true)} type="button">Open settings</button>
+          <button onClick={() => setOpen(true)} ref={triggerRef} type="button">Open settings</button>
           <SandboxDialog
             cancelLabel="Cancel"
             confirmLabel="Save"
@@ -19,6 +20,7 @@ describe("default sandbox UI", () => {
             onCancel={() => setOpen(false)}
             onConfirm={() => setOpen(false)}
             open={open}
+            returnFocusRef={triggerRef}
             title="History settings"
           >
             <input aria-label="Checkpoint interval" />
@@ -37,6 +39,8 @@ describe("default sandbox UI", () => {
     expect(screen.getByRole("button", { name: "Save" })).toHaveFocus();
     await user.tab();
     expect(firstField).toHaveFocus();
+    document.body.tabIndex = -1;
+    document.body.focus();
     await user.keyboard("{Escape}");
 
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
