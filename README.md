@@ -149,8 +149,9 @@ category identities, and prop metadata used to generate source.
 - Current Playwright Chromium, Firefox, and WebKit engines used by this repository.
 
 The package and basic consumer lockfiles are authoritative. CI uses the
-repository's platform-safe `npm install --ignore-scripts` workflow and fails if
-installation changes either lockfile.
+repository's platform-safe `npm install --ignore-scripts` workflow with a
+pinned npm 10 release and fails if installation changes either lockfile. The
+publish step switches to a pinned npm 11 release for provenance publication.
 
 Typing checkpoints on blur, paste checkpoints immediately, and story-source transfers checkpoint immediately. Reset remains in the dedicated view and clears code, history, undo/redo state, insertion progress, selection, and pending typing.
 

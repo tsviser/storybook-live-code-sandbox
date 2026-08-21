@@ -139,8 +139,9 @@ Complete these items before the production release candidate:
    Storybook 10.x, React and React DOM 18-19, Node 20.19+/22.12+, npm 10-11,
    and the current committed Playwright browser engines.
 7. **Complete:** CI preserves the platform-safe install path while enforcing
-   both authoritative lockfiles; floating `latest` development ranges were
-   replaced with bounded ranges.
+   both authoritative lockfiles with pinned npm 10.9.4 installs, then uses npm
+   11.6.0 for provenance publication; floating `latest` development ranges
+   were replaced with bounded ranges.
 8. Establish package and consumer bundle-size budgets, including the dedicated
    editor/parser path.
 9. Document the `react-live` syntax/runtime limitations and unsupported code

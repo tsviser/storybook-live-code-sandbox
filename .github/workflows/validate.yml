@@ -8,6 +8,9 @@ on:
 permissions:
   contents: read
 
+env:
+  INSTALL_NPM_VERSION: 10.9.4
+
 jobs:
   validate:
     runs-on: ubuntu-latest
@@ -27,6 +30,9 @@ jobs:
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
         run: node scripts/check-consistency.mjs --base "$BASE_SHA"
+
+      - name: Select deterministic install npm
+        run: npm install --global npm@${INSTALL_NPM_VERSION} --ignore-scripts --no-audit --no-fund
 
       - name: Install dependencies
         run: npm install --ignore-scripts --no-audit --no-fund
@@ -73,6 +79,9 @@ jobs:
         with:
           node-version: ${{ matrix.node }}
           cache: npm
+
+      - name: Select deterministic install npm
+        run: npm install --global npm@${INSTALL_NPM_VERSION} --ignore-scripts --no-audit --no-fund
 
       - name: Install locked dependencies
         run: |
