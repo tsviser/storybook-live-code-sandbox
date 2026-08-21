@@ -24,7 +24,7 @@ The package has a sound architectural foundation:
 
 Evidence verified through 2026-08-21:
 
-- 62 package unit tests passed;
+- 65 package unit tests passed;
 - 8 repository integration and consistency tests passed;
 - the package build passed;
 - the basic Storybook consumer build passed against the local package link;
@@ -33,7 +33,7 @@ Evidence verified through 2026-08-21:
   alert;
 - two-tab browser verification confirmed debounced draft synchronization,
   executed-preview synchronization, and reload persistence;
-- 23 committed browser checks passed across Chromium, Firefox, WebKit, and an
+- 29 committed browser checks passed across Chromium, Firefox, WebKit, and an
   exact 390 by 844 pixel Chromium mobile viewport;
 - package contents passed `npm pack --dry-run --ignore-scripts` with an isolated
   npm cache; and
@@ -124,10 +124,10 @@ Required outcome:
 
 Complete these items before the production release candidate:
 
-1. Make workspace orientation internally controlled or require a working
-   `onWorkspaceOrientationChange`; do not render a no-op Layout action.
-2. Catch clipboard and Fullscreen API failures and report useful, accessible
-   feedback.
+1. **Complete:** managed workspace orientation requires a working
+   `onWorkspaceOrientationChange`; no no-op Layout action is rendered.
+2. **Complete:** clipboard and Fullscreen API failures report useful,
+   accessible feedback and do not escape as unhandled promises.
 3. Validate registry uniqueness, scope membership, insertable examples,
    category identity, and prop metadata used to generate source.
 4. Compare integration-manifest symbols with generated declaration exports,

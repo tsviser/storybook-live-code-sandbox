@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 import {
   editor,
+  failSandboxBrowserApi,
   failSandboxStorage,
   openSandbox,
   preview,
@@ -133,4 +134,28 @@ test("migrates a legacy browser payload before persisting it", async ({ page }) 
     const raw = window.localStorage.getItem(storageKey);
     return raw ? JSON.parse(raw).version : null;
   }, sandboxStorageKey)).toBe(3);
+});
+
+test("reports clipboard failures without claiming the composition was copied", async ({ page }) => {
+  await failSandboxBrowserApi(page, "clipboard");
+  await openSandbox(page);
+
+  await page.getByRole("button", { name: "Copy code" }).click();
+
+  await expect(page.getByRole("alert")).toContainText(
+    "Copy failed. Select the code in the editor and copy it manually.",
+  );
+  await expect(page.getByRole("status")).toHaveCount(0);
+});
+
+test("reports fullscreen failures and keeps the workspace operable", async ({ page }) => {
+  await failSandboxBrowserApi(page, "fullscreen");
+  await openSandbox(page);
+
+  await page.getByRole("button", { name: "Fullscreen" }).click();
+
+  await expect(page.getByRole("alert")).toContainText(
+    "Fullscreen failed. Check browser permissions and try again.",
+  );
+  await expect(page.getByRole("region", { name: "Live code sandbox" })).toBeVisible();
 });

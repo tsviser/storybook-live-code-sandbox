@@ -150,6 +150,77 @@ describe("LiveCodeSandboxProvider", () => {
     expect(screen.getByRole("button", { name: "Close components" })).toBeInTheDocument();
   });
 
+  it("renders the managed Layout action only when it can change orientation", async () => {
+    const user = userEvent.setup();
+    const onOrientationChange = vi.fn();
+    const { rerender } = render(
+      <LiveCodeSandboxProvider
+        managed
+        registry={registry}
+        scope={{ Button, Card, IconButton, Link }}
+        storageKey="managed-layout"
+      />
+    );
+
+    expect(screen.queryByRole("button", { name: "Use vertical Code and Canvas layout" }))
+      .not.toBeInTheDocument();
+
+    rerender(
+      <LiveCodeSandboxProvider
+        managed
+        onWorkspaceOrientationChange={onOrientationChange}
+        registry={registry}
+        scope={{ Button, Card, IconButton, Link }}
+        storageKey="managed-layout"
+      />
+    );
+    await user.click(screen.getByRole("button", { name: "Use vertical Code and Canvas layout" }));
+
+    expect(onOrientationChange).toHaveBeenCalledWith("vertical");
+  });
+
+  it("reports a clipboard rejection instead of claiming success", async () => {
+    const user = userEvent.setup();
+    const clipboardDescriptor = Object.getOwnPropertyDescriptor(navigator, "clipboard");
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      value: { writeText: vi.fn().mockRejectedValue(new DOMException("Denied", "NotAllowedError")) },
+    });
+
+    try {
+      renderSandbox("clipboard-failure");
+      await user.click(screen.getByRole("button", { name: "Copy code" }));
+
+      expect(screen.getByRole("alert")).toHaveTextContent(
+        "Copy failed. Select the code in the editor and copy it manually.",
+      );
+    } finally {
+      if (clipboardDescriptor) Object.defineProperty(navigator, "clipboard", clipboardDescriptor);
+      else delete (navigator as Navigator & { clipboard?: Clipboard }).clipboard;
+    }
+  });
+
+  it("reports a fullscreen rejection without leaving an unhandled promise", async () => {
+    const user = userEvent.setup();
+    const fullscreenDescriptor = Object.getOwnPropertyDescriptor(Element.prototype, "requestFullscreen");
+    Object.defineProperty(Element.prototype, "requestFullscreen", {
+      configurable: true,
+      value: vi.fn().mockRejectedValue(new DOMException("Denied", "NotAllowedError")),
+    });
+
+    try {
+      renderSandbox("fullscreen-failure");
+      await user.click(screen.getByRole("button", { name: "Fullscreen" }));
+
+      expect(screen.getByRole("alert")).toHaveTextContent(
+        "Fullscreen failed. Check browser permissions and try again.",
+      );
+    } finally {
+      if (fullscreenDescriptor) Object.defineProperty(Element.prototype, "requestFullscreen", fullscreenDescriptor);
+      else delete (Element.prototype as Element & { requestFullscreen?: () => Promise<void> }).requestFullscreen;
+    }
+  });
+
   it("opens as an empty dedicated workspace with only visual components", () => {
     renderSandbox("empty");
 
