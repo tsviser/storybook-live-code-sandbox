@@ -1,5 +1,12 @@
 import { expect, test } from "@playwright/test";
-import { editor, openSandbox, preview } from "./helpers";
+import {
+  editor,
+  failSandboxStorage,
+  openSandbox,
+  preview,
+  sandboxStorageKey,
+  seedSandboxStorage,
+} from "./helpers";
 
 test("keeps drafts explicit and restores the last good preview after an error", async ({ page }) => {
   await openSandbox(page);
@@ -81,4 +88,49 @@ test("synchronizes drafts and successful previews between pages", async ({ conte
   await page.getByRole("button", { name: "Run code" }).click();
   await expect(preview(page).getByRole("button", { name: "Synchronized preview" })).toBeVisible();
   await expect(preview(secondPage).getByRole("button", { name: "Synchronized preview" })).toBeVisible();
+});
+
+test("keeps the workspace usable when sandbox storage is blocked", async ({ page }) => {
+  await failSandboxStorage(page, "blocked");
+  await openSandbox(page);
+
+  await expect(page.getByRole("alert")).toContainText(
+    /Sandbox storage is unavailable; (?:changes will not persist|recent changes were not persisted)\./,
+  );
+  await editor(page).fill('<Button label="Blocked storage draft" />');
+  await page.getByRole("button", { name: "Run code" }).click();
+
+  await expect(preview(page).getByRole("button", { name: "Blocked storage draft" })).toBeVisible();
+});
+
+test("keeps quota-limited drafts in memory and reports the persistence failure", async ({ page }) => {
+  await failSandboxStorage(page, "quota");
+  await openSandbox(page);
+
+  await editor(page).fill('<Button label="Quota-limited draft" />');
+  await expect(page.getByRole("alert")).toContainText(
+    "Sandbox storage is full; recent changes were not persisted.",
+  );
+  await page.getByRole("button", { name: "Run code" }).click();
+
+  await expect(preview(page).getByRole("button", { name: "Quota-limited draft" })).toBeVisible();
+});
+
+test("migrates a legacy browser payload before persisting it", async ({ page }) => {
+  const code = '<Button label="Migrated preview" variant="secondary" />';
+  await seedSandboxStorage(page, {
+    version: 1,
+    code,
+    cursor: code.length,
+    lastSuccessfulCode: code,
+    checkpoints: [],
+  });
+  await openSandbox(page);
+
+  await expect(editor(page)).toContainText(code);
+  await expect(preview(page).getByRole("button", { name: "Migrated preview" })).toBeVisible();
+  await expect.poll(() => page.evaluate((storageKey) => {
+    const raw = window.localStorage.getItem(storageKey);
+    return raw ? JSON.parse(raw).version : null;
+  }, sandboxStorageKey)).toBe(3);
 });

@@ -33,7 +33,7 @@ Evidence verified through 2026-08-21:
   alert;
 - two-tab browser verification confirmed debounced draft synchronization,
   executed-preview synchronization, and reload persistence;
-- 14 committed browser checks passed across Chromium, Firefox, WebKit, and an
+- 23 committed browser checks passed across Chromium, Firefox, WebKit, and an
   exact 390 by 844 pixel Chromium mobile viewport;
 - package contents passed `npm pack --dry-run --ignore-scripts` with an isolated
   npm cache; and
@@ -68,7 +68,7 @@ Remaining outcome:
 
 ### P0: Persistence and synchronization resilience
 
-Status: **implementation and core multi-context verification complete; failure-mode matrix open**
+Status: **implementation and automated browser failure-mode matrix complete**
 
 Storage access now reports loaded, empty, invalid, unavailable, and quota
 outcomes without crashing the workspace. Writes are debounced and flushed on
@@ -79,9 +79,11 @@ rehydrates deliberately, and checkpoint IDs have a non-crypto fallback.
 The conflict policy is last-arriving valid state wins for the complete
 workspace; concurrent field-level merging is intentionally unsupported.
 
-Remaining outcome:
-
-- verify blocked storage and quota behavior in target browsers.
+Chromium, Firefox, and WebKit now verify that injected blocked-storage and
+quota failures surface accessible warnings without crashing the workspace or
+losing the in-memory draft. The same engines verify migration of a version 1
+browser payload to version 3. Browser-policy-specific private-mode behavior
+remains part of manual release-candidate acceptance.
 
 ### P0: Default artifact accessibility
 
@@ -208,7 +210,7 @@ adapted artifacts.
 
 ### Phase 2: Automated evidence
 
-Status: **core browser matrix landed locally; broader package and interaction matrix open**
+Status: **core browser and persistence-failure matrices complete; broader package and interaction matrix open**
 
 Add the unit, browser, package, and consumer verification described above.
 Wire stable checks into protected-branch CI.

@@ -31,18 +31,19 @@ production-readiness claim.
   accessible names, component search offered native suggestions and selected
   an exact option, arrow keys activated tabs, and the settings dialog trapped
   focus, closed with Escape, and restored focus to its trigger.
-- Committed Playwright automation: 14 checks passed across Chromium, Firefox,
+- Committed Playwright automation: 23 checks passed across Chromium, Firefox,
   WebKit, and an exact 390 by 844 pixel Chromium mobile viewport. The suite
   covers explicit execution and rollback, fallback keyboard behavior, reload
-  persistence, two-page synchronization, mobile panel switching, and Chromium
-  dark, reduced-motion, forced-color, and RTL preferences.
+  persistence, two-page synchronization, blocked and quota-limited storage,
+  version 1 migration, mobile panel switching, and Chromium dark,
+  reduced-motion, forced-color, and RTL preferences.
 
 ## Remaining gates
 
 - Complete human testing on the target browsers and real mobile devices.
 - Complete human browser zoom, assistive-technology, and real-device checks.
-- Verify migration from an older storage payload; persistence across a browser
-  reload passed in the basic Storybook consumer.
+- Persistence across a browser reload and migration from a version 1 payload
+  now pass in the basic Storybook consumer on Chromium, Firefox, and WebKit.
 - The provider-level channel path and last-arriving-valid-state conflict policy
   have focused tests.
 - Decide whether the `0.1.x` API and storage contract are stable enough to
@@ -54,9 +55,10 @@ production-readiness claim.
   example dev server startup.
 - `react-live` evaluation limitations and the preview error model should be
   documented before a production stability claim.
-- Persistence failure behavior and last-arriving-state synchronization now
-  have focused tests; real-browser blocked-storage and quota verification
-  remain open.
+- Persistence failure behavior and last-arriving-state synchronization have
+  focused tests. Chromium, Firefox, and WebKit now run deterministic blocked
+  storage and quota-failure checks; browser-policy-specific private modes
+  remain a manual release-candidate check.
 - The manifest declares two symbols for the root subpath while `src/index.ts`
   exports sixteen. The validator compares subpaths only, so the gap passes.
 
