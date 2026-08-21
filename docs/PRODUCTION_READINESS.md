@@ -135,15 +135,16 @@ Complete these items before the production release candidate:
    declaration exports for every typed public subpath.
 5. **Complete:** README visibility language matches the actual default-visible
    behavior of `sandboxVisible` and the unavailable-entry contract.
-6. **Implemented; first CI matrix run pending:** the supported contract is
+6. **Complete:** the passing CI matrix verifies the supported contract of
    Storybook 10.x, React and React DOM 18-19, Node 20.19+/22.12+, npm 10-11,
    and the current committed Playwright browser engines.
 7. **Complete:** CI preserves the platform-safe install path while enforcing
    both authoritative lockfiles with pinned npm 10.9.4 installs, then uses npm
    11.6.0 for provenance publication; floating `latest` development ranges
    were replaced with bounded ranges.
-8. Establish package and consumer bundle-size budgets, including the dedicated
-   editor/parser path.
+8. **Complete:** versioned raw and gzip budgets cover total published
+   JavaScript/CSS, the package editor/parser chunk, the basic consumer sandbox
+   load, and its editor/parser chunk; CI also requires expected chunk counts.
 9. Document the `react-live` syntax/runtime limitations and unsupported code
    patterns.
 10. Complete documentation for every public provider prop and event contract.

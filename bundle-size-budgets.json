@@ -1,0 +1,46 @@
+{
+  "version": 1,
+  "gzipLevel": 9,
+  "budgets": [
+    {
+      "id": "package-total",
+      "label": "Published package JavaScript and CSS",
+      "scope": "package",
+      "directory": "dist",
+      "include": ["**/*.js", "**/*.css"],
+      "expectedFiles": 9,
+      "maxBytes": 950000,
+      "maxGzipBytes": 250000
+    },
+    {
+      "id": "package-editor-parser",
+      "label": "Published editor/parser chunk",
+      "scope": "package",
+      "directory": "dist",
+      "include": ["editorState-*.js"],
+      "expectedFiles": 1,
+      "maxBytes": 480000,
+      "maxGzipBytes": 145000
+    },
+    {
+      "id": "consumer-sandbox",
+      "label": "Basic consumer sandbox chunks",
+      "scope": "consumer",
+      "directory": "examples/basic-storybook/storybook-static/assets",
+      "include": ["LiveSandbox.stories-*.js", "editorState-*.js"],
+      "expectedFiles": 2,
+      "maxBytes": 750000,
+      "maxGzipBytes": 225000
+    },
+    {
+      "id": "consumer-editor-parser",
+      "label": "Basic consumer editor/parser chunk",
+      "scope": "consumer",
+      "directory": "examples/basic-storybook/storybook-static/assets",
+      "include": ["editorState-*.js"],
+      "expectedFiles": 1,
+      "maxBytes": 400000,
+      "maxGzipBytes": 135000
+    }
+  ]
+}
