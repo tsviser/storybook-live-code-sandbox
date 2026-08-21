@@ -148,6 +148,9 @@ Storage version 3 persists code, cursor, last successful preview code, checkpoin
 
 ## Release Process
 
+For a development checkout, run `npm run hooks:install` once. The tracked pre-push hook checks
+artifact metadata and workflow action pins before running the full release validation.
+
 1. Run `npm run release:check`.
 2. Install the generated tarball in a consuming Storybook.
 3. Complete manual desktop and mobile testing.

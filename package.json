@@ -56,11 +56,15 @@
   },
   "scripts": {
     "build": "vite build && tsc -p tsconfig.json",
+    "consistency:all": "node scripts/check-consistency.mjs --all",
+    "consistency:branch": "node scripts/check-consistency.mjs",
+    "consistency:staged": "node scripts/check-consistency.mjs --staged",
+    "hooks:install": "git config core.hooksPath .githooks",
     "test": "vitest run",
     "integration:check": "node scripts/validate-integration.mjs",
-    "integration:test": "node --test scripts/validate-integration.test.mjs",
+    "integration:test": "node --test scripts/validate-integration.test.mjs scripts/check-consistency.test.mjs",
     "prepare": "npm run build",
-    "release:check": "npm test && npm run build && npm run integration:test && npm run integration:check && npm pack --dry-run",
+    "release:check": "npm test && npm run build && npm run integration:test && npm run integration:check && npm pack --dry-run --ignore-scripts",
     "prepublishOnly": "npm test && npm run build"
   },
   "keywords": [

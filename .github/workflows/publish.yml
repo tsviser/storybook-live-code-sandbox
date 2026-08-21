@@ -16,20 +16,23 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: 24
           registry-url: https://registry.npmjs.org
           cache: npm
 
+      - name: Check repository consistency
+        run: node scripts/check-consistency.mjs --all
+
       - name: Install dependencies
-        run: npm install --include=optional
+        run: npm ci --ignore-scripts --no-audit --no-fund
 
       - name: Verify package
         run: npm run release:check
 
       - name: Publish to npm
-        run: npm publish --provenance --access public
+        run: npm publish --ignore-scripts --provenance --access public
