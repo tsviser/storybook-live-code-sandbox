@@ -527,8 +527,16 @@ export function LiveCodeSandboxProvider({
   }, []);
 
   const copy = useCallback(async () => {
-    await navigator.clipboard?.writeText(stateRef.current.code);
-    setNotice({ message: "Composition copied.", tone: "status" });
+    try {
+      if (!navigator.clipboard?.writeText) throw new Error("Clipboard API unavailable");
+      await navigator.clipboard.writeText(stateRef.current.code);
+      setNotice({ message: "Composition copied.", tone: "status" });
+    } catch {
+      setNotice({
+        message: "Copy failed. Select the code in the editor and copy it manually.",
+        tone: "warning",
+      });
+    }
   }, []);
 
   const openSettings = useCallback(() => {
@@ -538,8 +546,20 @@ export function LiveCodeSandboxProvider({
   }, []);
 
   const toggleFullscreen = useCallback(async () => {
-    if (document.fullscreenElement === surfaceRef.current) await document.exitFullscreen();
-    else await surfaceRef.current?.requestFullscreen?.();
+    try {
+      if (document.fullscreenElement === surfaceRef.current) {
+        if (!document.exitFullscreen) throw new Error("Fullscreen API unavailable");
+        await document.exitFullscreen();
+      } else {
+        if (!surfaceRef.current?.requestFullscreen) throw new Error("Fullscreen API unavailable");
+        await surfaceRef.current.requestFullscreen();
+      }
+    } catch {
+      setNotice({
+        message: "Fullscreen failed. Check browser permissions and try again.",
+        tone: "warning",
+      });
+    }
   }, []);
 
   const rootClassName = [
@@ -560,7 +580,7 @@ export function LiveCodeSandboxProvider({
             <SandboxButton ariaLabel="Run code" disabled={Boolean(pendingRun)} onClick={runCode} ui={ui}>{pendingRun ? "Running…" : "Run"}</SandboxButton>
             <SandboxButton ariaLabel="Undo" disabled={!canUndo} icon="undo" onClick={undoEditor} ui={ui}>Undo</SandboxButton>
             <SandboxButton ariaLabel="Copy code" icon="copy" onClick={copy} ui={ui}>Copy</SandboxButton>
-            {managed && !hideWorkspaceOrientationAction ? <SandboxButton ariaLabel={`Use ${workspaceOrientation === "horizontal" ? "vertical" : "horizontal"} Code and Canvas layout`} icon={workspaceOrientation === "horizontal" ? "layout-vertical" : "layout-horizontal"} onClick={() => onWorkspaceOrientationChange?.(workspaceOrientation === "horizontal" ? "vertical" : "horizontal")} ui={ui}>Layout</SandboxButton> : null}
+            {managed && !hideWorkspaceOrientationAction && onWorkspaceOrientationChange ? <SandboxButton ariaLabel={`Use ${workspaceOrientation === "horizontal" ? "vertical" : "horizontal"} Code and Canvas layout`} icon={workspaceOrientation === "horizontal" ? "layout-vertical" : "layout-horizontal"} onClick={() => onWorkspaceOrientationChange(workspaceOrientation === "horizontal" ? "vertical" : "horizontal")} ui={ui}>Layout</SandboxButton> : null}
             {!hideFullscreenAction ? <SandboxButton ariaLabel={isFullscreen ? "Exit fullscreen" : "Fullscreen"} icon={isFullscreen ? "exit-fullscreen" : "fullscreen"} onClick={toggleFullscreen} ui={ui}>{isFullscreen ? "Exit fullscreen" : "Fullscreen"}</SandboxButton> : null}
             <span aria-orientation="vertical" className="sb-live-code-sandbox__actionDivider" role="separator" />
             <SandboxButton ariaLabel="Reset" buttonRef={resetTriggerRef} icon="reset" onClick={requestReset} tone="danger" ui={ui}>Reset</SandboxButton>

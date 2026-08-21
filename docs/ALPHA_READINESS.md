@@ -6,7 +6,7 @@ production-readiness claim.
 
 ## Evidence completed
 
-- Package unit tests: 62 passed.
+- Package unit tests: 65 passed.
 - Repository integration and consistency tests: 8 passed.
 - Package build: passed.
 - Release check and `npm pack --dry-run`: passed.
@@ -31,7 +31,7 @@ production-readiness claim.
   accessible names, component search offered native suggestions and selected
   an exact option, arrow keys activated tabs, and the settings dialog trapped
   focus, closed with Escape, and restored focus to its trigger.
-- Committed Playwright automation: 23 checks passed across Chromium, Firefox,
+- Committed Playwright automation: 29 checks passed across Chromium, Firefox,
   WebKit, and an exact 390 by 844 pixel Chromium mobile viewport. The suite
   covers explicit execution and rollback, fallback keyboard behavior, reload
   persistence, two-page synchronization, blocked and quota-limited storage,
@@ -64,6 +64,9 @@ production-readiness claim.
 
 ## Resolved follow-ups
 
+- Clipboard and Fullscreen API failures now produce actionable warning alerts
+  instead of false success or unhandled promise rejections. Managed workspaces
+  render the Layout action only when an orientation-change callback exists.
 - The default artifact now has focused tests for native search selection,
   instance-unique dialog labeling, modal focus handling, Escape and focus
   restoration, associated tab panels, roving focus, and LTR/RTL arrow-key

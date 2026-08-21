@@ -126,6 +126,11 @@ Only entries with `sandboxVisible: true` appear. Categories create single-select
 - `checkpointInterval`: component/prop insertions per automatic checkpoint. Default `5`; `0` disables interval checkpoints.
 - `historyLimit`: retained checkpoints. Default `8`; constrained to `1-50`.
 - `channel`: optional Storybook-compatible channel for cross-frame synchronization.
+- `managed`: enables host-managed workspace behavior.
+- `workspaceOrientation`: current managed Code and Canvas orientation.
+- `onWorkspaceOrientationChange`: changes managed orientation; the Layout action is shown only when this callback is provided.
+- `hideFullscreenAction` and `hideWorkspaceOrientationAction`: hide the corresponding toolbar actions.
+- `toolbarActions`: additional host-owned toolbar content.
 - `ui`: optional `LiveCodeSandboxUIAdapter`.
 
 Typing checkpoints on blur, paste checkpoints immediately, and story-source transfers checkpoint immediately. Reset remains in the dedicated view and clears code, history, undo/redo state, insertion progress, selection, and pending typing.

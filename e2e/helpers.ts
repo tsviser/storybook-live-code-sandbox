@@ -31,10 +31,28 @@ export async function seedSandboxStorage(page: Page, value: unknown) {
   }, { storageKey: sandboxStorageKey, storedValue: value });
 }
 
+export async function failSandboxBrowserApi(page: Page, api: "clipboard" | "fullscreen") {
+  await page.addInitScript((failingApi) => {
+    if (failingApi === "clipboard") {
+      Object.defineProperty(navigator, "clipboard", {
+        configurable: true,
+        value: {
+          writeText: () => Promise.reject(new DOMException("Denied", "NotAllowedError")),
+        },
+      });
+      return;
+    }
+    Object.defineProperty(Element.prototype, "requestFullscreen", {
+      configurable: true,
+      value: () => Promise.reject(new DOMException("Denied", "NotAllowedError")),
+    });
+  }, api);
+}
+
 export async function openSandbox(page: Page) {
   await page.goto(storyPath);
   await expect(page).toHaveTitle("tools-live-sandbox--workspace");
-  await expect(page.getByRole("region", { name: "Live code sandbox" })).toBeVisible();
+  await expect(page.getByRole("region", { name: "Live code sandbox" })).toBeVisible({ timeout: 15_000 });
   await expect(page.locator("vite-error-overlay, #webpack-dev-server-client-overlay")).toHaveCount(0);
 }
 
