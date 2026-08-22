@@ -6,7 +6,7 @@ production-readiness claim.
 
 ## Evidence completed
 
-- Package unit tests: 71 passed.
+- Package unit tests: 93 passed.
 - Repository integration and consistency tests: 9 passed.
 - Package build: passed.
 - Release check and `npm pack --dry-run`: passed.
@@ -53,14 +53,20 @@ production-readiness claim.
 
 - Storybook currently reports an outdated JSX-transform warning during the
   example dev server startup.
-- `react-live` evaluation limitations and the preview error model should be
-  documented before a production stability claim.
 - Persistence failure behavior and last-arriving-state synchronization have
   focused tests. Chromium, Firefox, and WebKit now run deterministic blocked
   storage and quota-failure checks; browser-policy-specific private modes
   remain a manual release-candidate check.
 
 ## Resolved follow-ups
+
+- `react-live` evaluation limitations and the preview error model are documented
+  in `docs/preview-model.md`. The draft is wrapped as `<>{draft}</>` and
+  evaluated as one JSX expression, so statements, imports, comments, quoted
+  strings, and `render()` calls render as text instead of executing, hooks raise
+  an invalid-hook-call error, and unknown names fail at evaluation while the
+  static check reports only that a draft does not parse. Twenty-two tests in
+  `src/previewModel.test.tsx` hold the document to the measured behavior.
 
 - Supported versions are now explicit: Storybook 10.x, React/React DOM 18-19,
   Node 20.19+/22.12+, npm 10-11, and the committed Playwright engines. CI adds

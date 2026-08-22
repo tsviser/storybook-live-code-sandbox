@@ -24,7 +24,7 @@ The package has a sound architectural foundation:
 
 Evidence verified through 2026-08-21:
 
-- 71 package unit tests passed;
+- 93 package unit tests passed;
 - 9 repository integration and consistency tests passed;
 - the package build passed;
 - the basic Storybook consumer build passed against the local package link;
@@ -64,7 +64,9 @@ Remaining outcome:
 - verify rapid edits during a run and scope changes; repeated runs and empty
   drafts have focused regression coverage;
 - confirm error announcements and focus behavior with assistive technology;
-- keep the documented `react-live` trust boundary visible in release notes.
+- keep the documented `react-live` trust boundary visible in release notes;
+  the boundary and its evaluation limits are recorded in
+  `docs/preview-model.md`.
 
 ### P0: Persistence and synchronization resilience
 
@@ -145,9 +147,15 @@ Complete these items before the production release candidate:
 8. **Complete:** versioned raw and gzip budgets cover total published
    JavaScript/CSS, the package editor/parser chunk, the basic consumer sandbox
    load, and its editor/parser chunk; CI also requires expected chunk counts.
-9. Document the `react-live` syntax/runtime limitations and unsupported code
-   patterns.
-10. Complete documentation for every public provider prop and event contract.
+9. **Complete:** `docs/preview-model.md` documents the evaluation boundary: the
+   draft is wrapped as a single JSX expression, so statements, imports, comments,
+   quoted strings, and `render()` calls render as text rather than executing,
+   React hooks raise an invalid-hook-call error, and unknown names fail at
+   evaluation rather than in the static check. Every claim is asserted in
+   `src/previewModel.test.tsx`.
+10. **Complete:** every `LiveCodeSandboxConfig` prop is documented in the README
+   configuration list, including the previously omitted `forceRegistryPinned`.
+   The exported event contract is documented alongside the manager-link example.
 
 ## Verification matrix
 
