@@ -34,7 +34,9 @@ normalize optional native dependency metadata differently from macOS; the final 
 switches to pinned npm 11.6.0 for provenance publication. Floating `latest` development ranges
 were replaced with major-bounded ranges, and a focused Node 20/React 18 plus Node 22/React 19
 compatibility matrix verifies supported lower lines without duplicating the cross-browser suite.
-The release dry run skips
+Validation, compatibility, and publication builds enforce the versioned raw and gzip limits in
+`bundle-size-budgets.json` after producing both package and basic-consumer artifacts. The package
+release check also enforces package-only limits before packing. The release dry run skips
 lifecycle scripts after its explicit build, and the already-verified publish step also skips
 lifecycle scripts. The resulting publication job runs tests once and builds once, removing one
 test execution and four builds. The same install and dry-run changes remove two redundant builds

@@ -66,11 +66,13 @@
     "hooks:install": "git config core.hooksPath .githooks",
     "test": "vitest run",
     "test:browser": "playwright test",
+    "size:check": "node scripts/check-bundle-size.mjs",
+    "size:check:package": "node scripts/check-bundle-size.mjs --scope package",
     "integration:check": "node scripts/validate-integration.mjs",
-    "integration:test": "node --test scripts/validate-integration.test.mjs scripts/check-consistency.test.mjs",
+    "integration:test": "node --test scripts/validate-integration.test.mjs scripts/check-consistency.test.mjs scripts/check-bundle-size.test.mjs",
     "example:build": "npm --prefix examples/basic-storybook run build-storybook",
     "prepare": "npm run build",
-    "release:check": "npm test && npm run build && npm run integration:test && npm run integration:check && npm pack --dry-run --ignore-scripts",
+    "release:check": "npm test && npm run build && npm run size:check:package && npm run integration:test && npm run integration:check && npm pack --dry-run --ignore-scripts",
     "prepublishOnly": "npm test && npm run build"
   },
   "keywords": [

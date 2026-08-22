@@ -49,6 +49,9 @@ jobs:
       - name: Build local-package Storybook consumer
         run: npm run example:build
 
+      - name: Check package and consumer bundle budgets
+        run: npm run size:check
+
       - name: Install browser test engines
         run: npx playwright install --with-deps chromium firefox webkit
 
@@ -101,3 +104,4 @@ jobs:
           npm test
           npm run build
           npm run example:build
+          npm run size:check
