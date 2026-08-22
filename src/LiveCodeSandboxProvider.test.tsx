@@ -561,7 +561,9 @@ describe("LiveCodeSandboxProvider", () => {
     listeners.get(getLiveCodeSandboxSyncEvent("channel-sync"))?.(synchronized);
 
     await waitFor(() => expect(editorText()).toContain("<Card />"));
-    expect(screen.getByLabelText("Composition preview")).toHaveTextContent("Card");
+    await waitFor(() =>
+      expect(screen.getByLabelText("Composition preview")).toHaveTextContent("Card")
+    );
   });
 
   it("ignores malformed synchronized payloads", async () => {
@@ -583,7 +585,9 @@ describe("LiveCodeSandboxProvider", () => {
 
     expect(await screen.findByText("Ignored invalid synchronized sandbox state.")).toBeInTheDocument();
     expect(editorText()).toBe("<Card />");
-    expect(screen.getByLabelText("Composition preview")).toHaveTextContent("Card");
+    await waitFor(() =>
+      expect(screen.getByLabelText("Composition preview")).toHaveTextContent("Card")
+    );
   });
 
   it("reports invalid initial storage without loading it", async () => {
@@ -623,7 +627,9 @@ describe("LiveCodeSandboxProvider", () => {
     );
 
     await waitFor(() => expect(editorText()).toBe("<Button>Second</Button>"));
-    expect(screen.getByLabelText("Composition preview")).toHaveTextContent("Second");
+    await waitFor(() =>
+      expect(screen.getByLabelText("Composition preview")).toHaveTextContent("Second")
+    );
   });
 
   it("debounces writes and lets the last arriving valid synchronized state win", async () => {
