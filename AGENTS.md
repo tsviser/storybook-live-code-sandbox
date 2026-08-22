@@ -2,7 +2,8 @@
 
 `storybook-live-code-sandbox` is a design-system-agnostic npm package that gives Storybook one
 persistent live-composition workspace. Stories send their displayed source to a dedicated sandbox
-story; individual previews never mount drawers or providers. The published package is `0.1.2`.
+story; individual previews never mount drawers or providers. The published package is `0.1.2`;
+`main` carries the unpublished `0.2.0`.
 
 ## Repository gotchas
 
@@ -72,14 +73,13 @@ inside the Storybook preview boundary.
 ## What is open
 
 `docs/PRODUCTION_READINESS.md` is the authority on status; read it rather than relying on a summary
-here. As of 2026-08-22 the one open P0 is versioning the asynchronous `./storage` API: the subpath
-returns a promise and rejects instead of throwing, which cannot ship under the published `0.1.2`.
-It needs a compatibility policy, a `0.2.0` release, a matching `.crossroads` manifest update in the
-same commit, and migration notes.
+here. As of 2026-08-22 no P0 implementation work is open. The asynchronous `./storage` API is
+versioned as `0.2.0` with `docs/COMPATIBILITY.md` and `docs/migration-0.2.0.md`, and the version is
+prepared but **not published**: publication is a separate, explicitly approved step.
 
-What remains beyond that is human acceptance rather than implementation: browser zoom, assistive
-technology, and real-device passes, plus the decision recorded in `docs/ALPHA_READINESS.md` about
-whether the `0.1.x` API and storage contract are stable enough to document as alpha.
+What remains is human acceptance rather than implementation: browser zoom, assistive technology,
+and real-device passes, plus the decision recorded in `docs/ALPHA_READINESS.md` about whether the
+API and storage contract are stable enough to document as alpha.
 
 Investigate and propose before implementing. Source edits, dependency changes, publishing,
 releases, and external mutations require explicit authorization.

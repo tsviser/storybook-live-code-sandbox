@@ -1,6 +1,6 @@
 # Alpha readiness
 
-Status: **alpha candidate** for the `0.1.2` package. The sandbox is usable and
+Status: **alpha candidate** for the unpublished `0.2.0` package. The sandbox is usable and
 validated through its real basic Storybook consumer, but it is not yet a
 production-readiness claim.
 
@@ -46,8 +46,9 @@ production-readiness claim.
   now pass in the basic Storybook consumer on Chromium, Firefox, and WebKit.
 - The provider-level channel path and last-arriving-valid-state conflict policy
   have focused tests.
-- Decide whether the `0.1.x` API and storage contract are stable enough to
-  document as alpha.
+- Decide whether the API and storage contract are stable enough to document as
+  alpha. The pre-1.0 compatibility policy is recorded in
+  `docs/COMPATIBILITY.md`.
 
 ## Known follow-ups
 
