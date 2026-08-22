@@ -2,7 +2,7 @@
   "contractVersion": "0.1",
   "package": {
     "name": "storybook-live-code-sandbox",
-    "version": "0.1.2",
+    "version": "0.2.0",
     "repository": "https://github.com/tsviser/storybook-live-code-sandbox",
     "defaultBranch": "main"
   },

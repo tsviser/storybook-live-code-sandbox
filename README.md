@@ -141,6 +141,12 @@ category identities, and prop metadata used to generate source.
 - `toolbarActions`: additional host-owned toolbar content.
 - `ui`: optional `LiveCodeSandboxUIAdapter`.
 
+## Compatibility
+
+This package is pre-1.0. Breaking changes move the minor position, so `^0.2.0` does not cross to `0.3.0`. The full policy is in [docs/COMPATIBILITY.md](./docs/COMPATIBILITY.md).
+
+Upgrading from `0.1.x` requires one change: `addStoryToSandboxStorage` on the `./storage` subpath is now asynchronous. See the [0.2.0 migration notes](./docs/migration-0.2.0.md).
+
 ## Supported versions
 
 - Node.js `20.19+` or `22.12+`; CI verifies Node 20.19, 22.12, and 24.

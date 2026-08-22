@@ -2,42 +2,45 @@
 
 `storybook-live-code-sandbox` is a design-system-agnostic npm package that gives Storybook one
 persistent live-composition workspace. Stories send their displayed source to a dedicated sandbox
-story; individual previews never mount drawers or providers. The published package is `0.1.2`.
+story; individual previews never mount drawers or providers. The published package is `0.1.2`;
+`main` carries the unpublished `0.2.0`.
 
 ## Repository gotchas
 
-The local checkout can go stale. Fetch before drawing conclusions from local history, and compare
-the current branch with its remote tracking branch.
+**Fetch before every task, not once per session.** Work lands here from several machines, and
+`codex/*` branches merge multiple pull requests a day. On 2026-08-22 a fetch at the start of a
+session showed `origin/main` at `fd35a9d` with no open pull requests; a few hours later the same
+command showed `e46b2b5`, eleven commits ahead, with pull requests 5 through 15 all merged. An
+agent that trusted the first answer rebuilt two fixes that had already landed. Run `git fetch`
+again immediately before starting each piece of work, and read `gh pr list --state all` — merged
+titles reveal in-flight work that branch names do not.
 
-Native modules are platform-specific. `node_modules/@rolldown/` may contain only the binding for
+**Verify a finding still exists before fixing it.** Any list of open work in this repository is a
+snapshot. Check the current `origin/main` for the specific symbol or line before treating an item
+as real.
+
+**Native modules are platform-specific.** `node_modules/@rolldown/` may hold only the binding for
 the current platform. A rolldown "Cannot find native binding" startup error on another platform
-does not by itself mean the install is corrupt. Do not delete `node_modules` based only on that
-error; CI uses `npm install` to resolve platform-specific dependencies.
+does not mean the install is corrupt, and deleting `node_modules` will not fix it. CI uses
+`npm install` for this reason.
 
-The `.crossroads` manifest pins `package.version`. `scripts/validate-integration.mjs` fails if the
-manifest and `package.json` disagree, so any version bump must update both in the same commit.
+**The `.crossroads` manifest pins `package.version`.** `scripts/validate-integration.mjs` fails
+when the manifest and `package.json` disagree, so a version bump has to touch both in one commit.
 
 ## Commands
 
+`npm run` lists every script. The ones whose behaviour is not obvious from the name:
+
 ```sh
-npm test                  # vitest
-npm run test:browser      # local Storybook in Chromium, Firefox, WebKit, and 390 px Chromium
-npm run build             # vite library build + TypeScript declarations
-npm run integration:check # validate the Crossroads manifest and invalid fixtures
-npm run integration:test  # node:test suite around the validator
-npm run example:build     # build Storybook against the current checkout
-npm run release:check     # all checks above + npm pack --dry-run
-npm run consistency:all   # full metadata and workflow snapshot
-npm run consistency:staged # metadata checks for the staged snapshot
-npm run consistency:branch # metadata checks against origin/main
+npm run test:browser       # Playwright: Chromium, Firefox, WebKit, and a 390x844 Chromium viewport
+npm run release:check      # test, build, package size budgets, integration checks, npm pack --dry-run
+npm run consistency:branch # metadata and workflow checks, diffed against origin/main
+npm run hooks:install      # once per checkout; enables the tracked pre-push hook
 ```
 
-Run `npm run hooks:install` once per checkout to enable the tracked pre-push hook. The hook runs
-the inexpensive branch consistency check before the full release validation. Publication runs the
-full-snapshot check before installing dependencies. Set
-`CONSISTENCY_BASE_REF` only when the branch intentionally targets a base other than `origin/main`.
+Set `CONSISTENCY_BASE_REF` only when a branch deliberately targets a base other than `origin/main`.
 
-Release work is deliberately staged: run `release:check`, install the tarball in a consuming
+Release work is staged on purpose: run `release:check`, install the tarball in a consuming
 Storybook, complete manual desktop and mobile testing, and publish only after explicit approval.
 Validation, versioning, and publication are never combined.
 
@@ -49,57 +52,44 @@ inside the Storybook preview boundary.
 - `scope` (`LiveCodeScope`) is the runtime name-to-value namespace handed to `react-live`. It is
   intentionally broader than the picker and is not a component catalog.
 - `registry` (`LiveCodeRegistryItem[]`) is curated metadata driving visible components, insertable
-  examples, and prop suggestions. It is not a runtime import mechanism. Entries that are
-  unavailable or not `sandboxVisible` must never be selectable.
-- `editorState.ts` holds pure logic: safe top-level JSX insertion via the Lezer parser,
-  checkpoints, prop-assignment synthesis, and versioned storage parsing. Storage is at version 3
-  and migrates versions 1 and 2 on read.
+  examples, and prop suggestions. It is not a runtime import mechanism. Selectable entries cross a
+  fail-closed validation boundary; entries that are unavailable or not `sandboxVisible` must never
+  be selectable.
+- `editorState.ts` holds the pure logic: safe top-level JSX insertion via the Lezer parser,
+  checkpoints, prop-assignment synthesis, versioned storage parsing, and the guarded
+  `readSandboxStorage` and `writeSandboxStorage` helpers. Storage is at version 3 and migrates
+  versions 1 and 2 on read.
 - Draft edits execute only after the explicit Run action. The preview renders `lastSuccessfulCode`,
-  so compile and runtime failures return to the previous successful composition.
-- `ui.tsx` provides fallback controls; a `LiveCodeSandboxUIAdapter` lets a design system replace
-  buttons, chips, fields, tabs, dialogs, notifications, the surface, and the workspace layout.
+  so a compile or runtime failure returns to the previous successful composition instead of
+  blanking the canvas.
+- The draft is wrapped as `<>{draft}</>` and evaluated as one JSX expression. Everything the
+  preview can and cannot run follows from that, including the cases that fail silently.
+  `docs/preview-model.md` records the measured behaviour and `src/previewModel.test.tsx` holds it
+  in place.
+- `ui.tsx` provides the fallback artifact; a `LiveCodeSandboxUIAdapter` lets a design system
+  replace buttons, chips, fields, tabs, dialogs, notifications, the surface, and the workspace
+  layout. The fallback is production-capable on its own and is tested without an adapter.
 
-## Current baseline
+## What is open
 
-The current runtime baseline includes:
+`docs/PRODUCTION_READINESS.md` is the authority on status; read it rather than relying on a summary
+here. As of 2026-08-22 no P0 implementation work is open. The asynchronous `./storage` API is
+versioned as `0.2.0` with `docs/COMPATIBILITY.md` and `docs/migration-0.2.0.md`, and the version is
+prepared but **not published**: publication is a separate, explicitly approved step.
 
-- lazy loading for the JSX parser used by the `./storage` entry point;
-- the async `addStoryToSandboxStorage` API and corresponding documentation/tests;
-- registry category ordering by relevance;
-- managed empty-stage and preview interaction fixes;
-- responsive registry styling and focused tests; and
-- the repository-owned Crossroads integration contract and validation checks.
+What remains is human acceptance rather than implementation: browser zoom, assistive technology,
+and real-device passes, plus the decision recorded in `docs/ALPHA_READINESS.md` about whether the
+API and storage contract are stable enough to document as alpha.
 
-The lazy-loading change is a breaking change to the `./storage` subpath: it returns a promise and
-rejects rather than throwing. The synchronous package-root export is unchanged. Versioning and the
-matching `.crossroads` manifest update are required before publishing a release containing this
-change.
-
-## Open findings
-
-These findings remain review items, not implicit implementation authorization:
-
-1. Default-artifact keyboard behavior, reduced-motion, forced-color, RTL, dark-theme, and 390 px
-   mobile behavior now have committed browser coverage; browser zoom, assistive technology, and
-   real-device acceptance remain open.
-2. `crypto.randomUUID?.()` and `localStorage.setItem` are not fully guarded for environments such
-   as non-secure contexts, Safari private mode, or storage quota exhaustion.
-3. The manifest declares fewer root-subpath symbols than `src/index.ts` exports. The validator
-   currently checks subpaths but not symbol parity against the built declarations.
-4. The README omits several public props, including `managed`, workspace orientation controls, and
-   toolbar actions.
-5. The `storybook` peer range may be unnecessarily narrow because the source uses structural
-   channel typing rather than importing Storybook directly.
-6. `docs/ALPHA_READINESS.md` still records open alpha-stability and rendered accessibility-matrix gates.
-
-Investigate and propose before implementing. Source edits, dependency changes, publishing, releases,
-and external mutations require explicit authorization.
+Investigate and propose before implementing. Source edits, dependency changes, publishing,
+releases, and external mutations require explicit authorization.
 
 ## Conventions
 
-Prose in docs and commit messages is plain and declarative. Claims about sizes, counts, or behavior
-must be measured before being written down. Preserve unrelated dirty changes, verify branch/ref and
-file scope before edits, and do not commit or push unless explicitly requested.
+Prose in docs and commit messages is plain and declarative. Claims about sizes, counts, or
+behaviour are measured before they are written down; the readiness documents record evidence and
+open gates rather than assurances. Preserve unrelated dirty changes, verify branch, ref, and file
+scope before editing, and commit or push only when asked.
 
 The Crossroads agent integration is read-only discovery. It does not authorize source mutation,
 publishing, releases, or external repository writes.

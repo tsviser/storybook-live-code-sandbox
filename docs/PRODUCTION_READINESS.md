@@ -2,6 +2,8 @@
 
 Status: **alpha candidate; not production-ready**
 
+Version: `0.2.0` prepared on `main`, unpublished; `0.1.2` is the published release.
+
 Last reviewed: 2026-08-21
 
 This roadmap defines the work and evidence required to move
@@ -110,17 +112,27 @@ Required outcome:
 
 ### P0: Version the asynchronous storage API
 
-The `./storage` entry point now returns a promise and rejects instead of
-returning synchronously and throwing. This change must not ship under the
-already published `0.1.2` version.
+Status: **prepared, not published**
 
-Required outcome:
+The `./storage` entry point returns a promise and rejects instead of returning
+synchronously and throwing, and that change cannot ship under the already
+published `0.1.2`.
 
-- choose and document the pre-1.0 compatibility policy;
-- release the breaking API as `0.2.0`;
-- update `.crossroads/live-code-sandbox.integration.json` in the same commit;
-  and
-- publish migration notes with before-and-after usage.
+`docs/COMPATIBILITY.md` records the pre-1.0 policy: the minor position carries
+breaking changes before 1.0, the patch position carries everything else, and a
+caret range on a `0.x` version does not cross a minor. `package.json`,
+`package-lock.json`, the basic consumer lockfile, and
+`.crossroads/live-code-sandbox.integration.json` all move to `0.2.0` in one
+commit, which is what `scripts/validate-integration.mjs` enforces. The three
+manifest fixtures that pin a version move with them so each keeps failing only
+for the fault it is meant to isolate. `docs/migration-0.2.0.md` carries the
+before-and-after usage, the rejection reasons, and the unhandled-rejection
+hazard for callers whose synchronous `try`/`catch` no longer sees the throw.
+
+Remaining outcome:
+
+- publish `0.2.0`, which is Phase 4 and requires explicit approval; the version
+  is prepared here and deliberately not released.
 
 ## Important hardening
 

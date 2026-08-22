@@ -1,6 +1,6 @@
 {
   "name": "storybook-live-code-sandbox",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "description": "Preview-iframe Storybook live composition sandbox built with CodeMirror and react-live.",
   "repository": {
     "type": "git",
