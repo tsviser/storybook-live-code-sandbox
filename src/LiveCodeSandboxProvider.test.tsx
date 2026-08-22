@@ -296,3 +296,38 @@ describe("LiveCodeSandboxProvider", () => {
     expect(screen.getByLabelText("Composition preview")).toHaveTextContent("Card");
   });
 });
+
+describe("LiveCodeSandboxProvider storage failures", () => {
+  beforeEach(() => {
+    vi.restoreAllMocks();
+    window.localStorage.clear();
+  });
+
+  it("keeps working when the browser refuses to persist", async () => {
+    const user = userEvent.setup();
+    vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
+      throw new DOMException("QuotaExceededError");
+    });
+
+    expect(() => renderSandbox("unwritable")).not.toThrow();
+
+    const warning = await screen.findByRole("alert");
+    expect(warning).toHaveTextContent("cannot be saved");
+
+    // Persistence is attempted on every edit, so a store that keeps refusing
+    // must not surface a fresh warning per keystroke.
+    await user.click(document.querySelector(".cm-content") as HTMLElement);
+    await user.keyboard("x");
+
+    expect(screen.getAllByRole("alert")).toHaveLength(1);
+  });
+
+  it("starts from defaults when the store cannot be read", () => {
+    vi.spyOn(Storage.prototype, "getItem").mockImplementation(() => {
+      throw new DOMException("SecurityError");
+    });
+
+    expect(() => renderSandbox("unreadable")).not.toThrow();
+    expect(editorText()).toBe(createDefaultStorage().code);
+  });
+});

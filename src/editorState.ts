@@ -127,7 +127,7 @@ export const addCheckpoint = (
   ...checkpoints,
   {
     ...checkpoint,
-    id: `${createdAt}-${crypto.randomUUID?.() ?? checkpoints.length}`,
+    id: `${createdAt}-${globalThis.crypto?.randomUUID?.() ?? checkpoints.length}`,
     createdAt,
   },
 ].slice(-normalizeHistoryLimit(historyLimit));
@@ -202,6 +202,39 @@ const isCheckpoint = (value: unknown): value is LiveCodeCheckpoint => {
     typeof item.createdAt === "number";
 };
 
+/**
+ * Reads a persisted sandbox payload.
+ *
+ * Touching `localStorage` at all throws in a sandboxed iframe or where the
+ * browser blocks storage, so the access itself is guarded rather than just the
+ * value it returns. An unreadable store is reported as absent.
+ */
+export const readSandboxStorage = (storageKey: string): string | null => {
+  try {
+    return globalThis.localStorage?.getItem(storageKey) ?? null;
+  } catch {
+    return null;
+  }
+};
+
+/**
+ * Persists a sandbox payload, reporting whether the write landed.
+ *
+ * Safari private mode and an exhausted quota both throw here while the read
+ * path degrades safely, so callers are given a boolean to react to instead of
+ * an exception that would escape a render or an effect.
+ */
+export const writeSandboxStorage = (storageKey: string, value: string): boolean => {
+  try {
+    const store = globalThis.localStorage;
+    if (!store) return false;
+    store.setItem(storageKey, value);
+    return true;
+  } catch {
+    return false;
+  }
+};
+
 export const safeParseStorage = (
   raw: string | null,
   initialCode = DEFAULT_CODE,
@@ -269,7 +302,7 @@ export const addStoryToSandboxStorage = ({
     throw new Error("Story source is unavailable.");
   }
   const current = safeParseStorage(
-    window.localStorage.getItem(storageKey),
+    readSandboxStorage(storageKey),
     DEFAULT_CODE,
     checkpointInterval,
     historyLimit,
@@ -288,6 +321,9 @@ export const addStoryToSandboxStorage = ({
       cursor: inserted.cursor,
     }, current.historyLimit),
   };
+  // Deliberately unguarded: this entry point's contract is to reject and leave
+  // the workspace untouched when the store refuses the write, and the throw
+  // happens before anything is announced to listeners.
   window.localStorage.setItem(storageKey, JSON.stringify(next));
   window.dispatchEvent(new CustomEvent(`live-code-sandbox:${storageKey}`, { detail: next }));
   channel?.emit(getLiveCodeSandboxSyncEvent(storageKey), next);

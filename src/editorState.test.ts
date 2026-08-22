@@ -10,6 +10,8 @@ import {
   getPreviewCode,
   getPropInsertionOffset,
   getSafeTopLevelInsertionOffset,
+  readSandboxStorage,
+  writeSandboxStorage,
   insertSnippet,
   insertSnippetSafely,
   safeParseStorage,
@@ -224,5 +226,78 @@ describe("preview source", () => {
         <RadioGroup.Option label="Daily digest" value="option2" />
       </RadioGroup.Root>
     `)).toBeNull();
+  });
+});
+
+describe("storage and crypto guards", () => {
+  beforeEach(() => {
+    vi.restoreAllMocks();
+    window.localStorage.clear();
+  });
+
+  it("creates a checkpoint id where the crypto global is absent", () => {
+    vi.stubGlobal("crypto", undefined);
+    try {
+      const checkpoints = addCheckpoint([], { label: "Added Card", code: "<Card />", cursor: 0 });
+      expect(checkpoints).toHaveLength(1);
+      expect(checkpoints[0].id).toBeTruthy();
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it("reports an unreadable store as absent", () => {
+    vi.spyOn(Storage.prototype, "getItem").mockImplementation(() => {
+      throw new DOMException("SecurityError");
+    });
+
+    expect(readSandboxStorage("blocked")).toBeNull();
+    expect(safeParseStorage(readSandboxStorage("blocked")).code).toBe(createDefaultStorage().code);
+  });
+
+  it("reports a failed write instead of throwing", () => {
+    vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
+      throw new DOMException("QuotaExceededError");
+    });
+
+    expect(writeSandboxStorage("full", "{}")).toBe(false);
+  });
+
+  it("reports a failed write where there is no store at all", () => {
+    vi.stubGlobal("localStorage", undefined);
+    try {
+      expect(writeSandboxStorage("absent", "{}")).toBe(false);
+      expect(readSandboxStorage("absent")).toBeNull();
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it("reports a successful write", () => {
+    expect(writeSandboxStorage("ok", '{"a":1}')).toBe(true);
+    expect(window.localStorage.getItem("ok")).toBe('{"a":1}');
+  });
+
+  it("does not announce a story transfer that could not be persisted", () => {
+    vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
+      throw new DOMException("QuotaExceededError");
+    });
+    const dispatched: Event[] = [];
+    const listener = (event: Event) => dispatched.push(event);
+    window.addEventListener("live-code-sandbox:quota", listener);
+    const channel = { emit: vi.fn() };
+
+    try {
+      expect(() => addStoryToSandboxStorage({
+        channel,
+        code: "<Card />",
+        storageKey: "quota",
+        storyName: "Card",
+      })).toThrow("QuotaExceededError");
+      expect(dispatched).toHaveLength(0);
+      expect(channel.emit).not.toHaveBeenCalled();
+    } finally {
+      window.removeEventListener("live-code-sandbox:quota", listener);
+    }
   });
 });

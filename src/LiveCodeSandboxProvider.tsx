@@ -21,8 +21,10 @@ import {
   insertSnippetSafely,
   normalizeCheckpointInterval,
   normalizeHistoryLimit,
+  readSandboxStorage,
   safeParseStorage,
   validateJsx,
+  writeSandboxStorage,
 } from "./editorState";
 import type {
   LiveCodeCheckpoint,
@@ -78,7 +80,7 @@ export function LiveCodeSandboxProvider({
 }: LiveCodeSandboxProviderProps) {
   const [state, setState] = useState<LiveCodeSandboxStorage>(() => {
     if (typeof window === "undefined") return createDefaultStorage(initialCode, checkpointInterval, historyLimit);
-    return safeParseStorage(window.localStorage.getItem(storageKey), initialCode, checkpointInterval, historyLimit);
+    return safeParseStorage(readSandboxStorage(storageKey), initialCode, checkpointInterval, historyLimit);
   });
   const [filter, setFilter] = useState("");
   const [activeCategory, setActiveCategory] = useState("");
@@ -103,10 +105,22 @@ export function LiveCodeSandboxProvider({
   const typingDirtyRef = useRef(false);
   const pendingInsertionRef = useRef<PendingInsertion>(null);
   const checkpointListRef = useRef<HTMLDivElement | null>(null);
+  const storageWarnedRef = useRef(false);
   stateRef.current = state;
 
   useEffect(() => {
-    window.localStorage.setItem(storageKey, JSON.stringify(state));
+    if (writeSandboxStorage(storageKey, JSON.stringify(state))) {
+      storageWarnedRef.current = false;
+      return;
+    }
+    // This effect runs on every edit, so an unwritable store would otherwise
+    // throw on each keystroke. Warn once and let the session continue in memory.
+    if (storageWarnedRef.current) return;
+    storageWarnedRef.current = true;
+    setNotice({
+      message: "This composition cannot be saved in the current browser and will be lost when the page closes.",
+      tone: "warning",
+    });
   }, [state, storageKey]);
 
   useEffect(() => {
