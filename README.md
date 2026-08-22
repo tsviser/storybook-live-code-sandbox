@@ -134,6 +134,7 @@ category identities, and prop metadata used to generate source.
 - `historyLimit`: retained checkpoints. Default `8`; constrained to `1-50`.
 - `channel`: optional Storybook-compatible channel for cross-frame synchronization.
 - `managed`: enables host-managed workspace behavior.
+- `forceRegistryPinned`: keeps the managed component panel pinned regardless of the user's own pin toggle, so pointing outside the panel does not dismiss it.
 - `workspaceOrientation`: current managed Code and Canvas orientation.
 - `onWorkspaceOrientationChange`: changes managed orientation; the Layout action is shown only when this callback is provided.
 - `hideFullscreenAction` and `hideWorkspaceOrientationAction`: hide the corresponding toolbar actions.
@@ -170,6 +171,8 @@ Typing checkpoints on blur, paste checkpoints immediately, and story-source tran
 Editor content is draft code. Typing, pasting, registry insertion, prop insertion, checkpoint restoration, and Storybook source transfer do not execute code automatically. Activate **Run** to validate and evaluate the current draft. A compile or runtime failure leaves the previous successful preview in place and reports the error.
 
 The preview runs through `react-live` in the Storybook preview page. It inherits that page's providers and runtime context, but it is not a security boundary. Only expose trusted runtime values through `scope`, and do not use the sandbox to execute untrusted code.
+
+The draft is wrapped as `<>{draft}</>` and evaluated as a single JSX expression, which decides what the preview can and cannot run. Statements, imports, and `render()` calls are rendered as text rather than executed, and React hooks are unavailable. See the [preview model](./docs/preview-model.md) for the measured behavior of each case and how failures are reported.
 
 ## UI Artifacts
 
