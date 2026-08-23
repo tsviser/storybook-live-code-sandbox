@@ -27,6 +27,13 @@ jobs:
     permissions:
       contents: read
       pull-requests: write
+      # Required. The action exchanges the workflow's GitHub OIDC token for a
+      # Claude App token so its comments are attributed to claude[bot] rather
+      # than to github-actions[bot]. Without this it fails at setup with
+      # "Could not fetch an OIDC token", before reading a single line of the
+      # diff. Safe here because the fork guard below means this job never runs
+      # for a pull request from a fork.
+      id-token: write
     # This repository is public. `ubuntu-latest` is mandatory here -- a
     # self-hosted runner would let a fork pull request execute arbitrary code
     # on the owner's machine. The fork guard below is the second half of that:
