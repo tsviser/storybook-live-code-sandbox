@@ -115,7 +115,7 @@ jobs:
     # OSV scan, secret scan, npm audit -- from the control plane. Reusable
     # rather than composite because none of these job names are load-bearing;
     # only the aggregate gate's name is.
-    uses: tsviser/crossroads-ci/.github/workflows/_supply-chain.yml@main
+    uses: tsviser/crossroads-ci/.github/workflows/_supply-chain.yml@20ad5f774678414452201695c5f27017fa1f94f1 # main
     permissions:
       contents: read
     with:
