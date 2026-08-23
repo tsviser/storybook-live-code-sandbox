@@ -123,48 +123,24 @@ jobs:
 
   pr_validation:
     name: PR Validation
-    # Aggregate gate. Every Crossroads repository exposes one required status
-    # check under this exact name, so the jobs beneath it can be renamed, split
-    # or extended without touching the branch protection rule. GitHub stores a
-    # required check as plain text rather than as a reference to a job, so a
-    # rename made without updating the rule fails silently rather than loudly.
-    #
-    # `needs` deliberately includes `compatibility`. Its matrix legs report as
-    # "Compatibility (Node 20.19.0, React 18.3.1)" and similar, so requiring
-    # them individually would pin a Node and React pair into branch protection
-    # and silently exempt any pair added later. Depending on the matrix job as a
-    # whole aggregates every leg under one name.
-    #
-    # `!cancelled()` rather than `always()`: a run cancelled by hand should
-    # render no verdict rather than leave a red required check behind. A job
-    # cancelled on its own while its run stays live is a different case --
-    # `cancelled()` is false there, so the gate still runs and the check below
-    # still refuses to pass a job that did not finish.
+    # Aggregate gate; the name is the fleet's required check and never
+    # changes. Logic lives in the control plane's composite action -- a
+    # composite, not a reusable workflow, so this job's check context stays
+    # intact. `needs` includes the matrix job as a whole, aggregating every
+    # leg under one name, and the supply-chain reusable from Phase 02.
     if: ${{ !cancelled() }}
     needs: [validate, compatibility, supply-chain]
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    # No checkout: a remote composite is fetched by the runner, and this job
+    # reads job results, not the repository.
     steps:
-      # No checkout step: this job reads job results, not the repository.
       - name: Check required results
-        env:
-          VALIDATE_RESULT: ${{ needs.validate.result }}
-          COMPATIBILITY_RESULT: ${{ needs.compatibility.result }}
-          SUPPLY_CHAIN_RESULT: ${{ needs.supply-chain.result }}
-        run: |
-          echo "Validate:      $VALIDATE_RESULT"
-          echo "Compatibility: $COMPATIBILITY_RESULT"
-          echo "Supply chain:  $SUPPLY_CHAIN_RESULT"
-          status=0
-          for pair in "Validate:$VALIDATE_RESULT" "Compatibility:$COMPATIBILITY_RESULT" "Supply chain:$SUPPLY_CHAIN_RESULT"; do
-            name="${pair%%:*}"
-            result="${pair#*:}"
-            [ "$result" = "success" ] && continue
-            if [ "$result" = "cancelled" ]; then
-              echo "$name was cancelled while this run stayed live; a required job that did not finish cannot pass the gate." >&2
-            else
-              echo "$name did not pass ($result)." >&2
-            fi
-            status=1
-          done
-          exit "$status"
+        uses: tsviser/crossroads-ci/actions/gate@e006da28fba6e9a456c62acb3d7c036078b07473 # main
+        with:
+          results: |
+            {
+              "Validate": "${{ needs.validate.result }}",
+              "Compatibility": "${{ needs.compatibility.result }}",
+              "Supply chain": "${{ needs.supply-chain.result }}"
+            }
