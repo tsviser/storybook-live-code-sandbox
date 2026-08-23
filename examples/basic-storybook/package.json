@@ -8,8 +8,8 @@
     "build-storybook": "storybook build"
   },
   "dependencies": {
-    "@storybook/addon-docs": "^10.5.5",
-    "@storybook/react-vite": "^10.5.5",
+    "@storybook/addon-docs": "^10.5.10",
+    "@storybook/react-vite": "^10.5.10",
     "@vitejs/plugin-react": "^6.0.5",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
