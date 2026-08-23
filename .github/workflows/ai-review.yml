@@ -22,7 +22,7 @@ permissions:
 jobs:
   ai_review:
     name: AI Review
-    uses: tsviser/crossroads-ci/.github/workflows/_ai-review.yml@e006da28fba6e9a456c62acb3d7c036078b07473 # main
+    uses: tsviser/crossroads-ci/.github/workflows/_ai-review.yml@b6f9db5ed0da86e581d255697b36c9fccbe8b99e # main
     permissions:
       contents: read
       pull-requests: write
