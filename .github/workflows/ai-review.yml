@@ -1,0 +1,68 @@
+# AI review for pull requests.
+#
+# Comment-only and deliberately not a required status check: branch protection
+# requires "PR Validation" from validate.yml, and a reviewer that can block a
+# merge is a reviewer that gets worked around. The contract it follows is
+# .github/review-guidelines.md.
+name: AI Review
+
+on:
+  pull_request:
+    # Deliberately not `synchronize`. Reviewing every push re-reviews the whole
+    # diff and posts its findings again; reviewing on opened / ready_for_review
+    # / reopened gives one review of the state being merged. To re-review after
+    # further commits, toggle the pull request to draft and back to ready.
+    types: [opened, ready_for_review, reopened]
+
+concurrency:
+  group: ai-review-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  ai_review:
+    name: AI Review
+    permissions:
+      contents: read
+      pull-requests: write
+    # This repository is public. `ubuntu-latest` is mandatory here -- a
+    # self-hosted runner would let a fork pull request execute arbitrary code
+    # on the owner's machine. The fork guard below is the second half of that:
+    # with `pull_request`, secrets are unavailable to forks anyway, so the job
+    # is skipped rather than failing halfway through.
+    if: >-
+      !github.event.pull_request.draft &&
+      !contains(github.event.pull_request.title, '[skip-ai-review]') &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Review
+        uses: anthropics/claude-code-action@24dcd50c0568f0fc9e9211213a4fd2d9eb15c4e0 # v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          # One rolling comment rather than a new thread per run, so a
+          # re-review replaces the previous verdict instead of stacking beside it.
+          use_sticky_comment: true
+          claude_args: |
+            --max-turns 25
+          prompt: |
+            Review this pull request against .github/review-guidelines.md.
+            That file is the contract. Follow it exactly, including the
+            comment-only rule and the instruction to inspect the
+            source-of-truth files it names before judging a change.
+
+            You are running inside the checkout, so open those files rather
+            than inferring from the diff. package.json, the build config and
+            the existing tests are all readable.
+
+            Report only actionable findings supported by changed lines,
+            highest severity first, capped at 20 inline comments. Skip style
+            nits. Do not approve or request changes through the review API.
