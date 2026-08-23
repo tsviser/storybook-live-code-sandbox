@@ -1,0 +1,29 @@
+# Phase 02 of the fleet CI roadmap. Grouped weekly so a quiet week produces
+# one reviewable PR per ecosystem, with exact pinned versions -- unlike the
+# semver-range `npm update` pattern this fleet has retired.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: sunday
+    groups:
+      npm:
+        patterns: ["*"]
+  - package-ecosystem: npm
+    directory: /examples/basic-storybook
+    schedule:
+      interval: weekly
+      day: sunday
+    groups:
+      npm:
+        patterns: ["*"]
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: sunday
+    groups:
+      actions:
+        patterns: ["*"]

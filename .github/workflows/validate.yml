@@ -19,6 +19,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Setup Node
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
@@ -76,6 +77,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Setup Node
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
@@ -106,6 +109,18 @@ jobs:
           npm run example:build
           npm run size:check
 
+  supply-chain:
+    name: Supply chain
+    # Phase 02: the fleet's shared supply-chain checks -- dependency review,
+    # OSV scan, secret scan, npm audit -- from the control plane. Reusable
+    # rather than composite because none of these job names are load-bearing;
+    # only the aggregate gate's name is.
+    uses: tsviser/crossroads-ci/.github/workflows/_supply-chain.yml@20ad5f774678414452201695c5f27017fa1f94f1 # main
+    permissions:
+      contents: read
+    with:
+      npm-audit: true
+
   pr_validation:
     name: PR Validation
     # Aggregate gate. Every Crossroads repository exposes one required status
@@ -126,7 +141,7 @@ jobs:
     # `cancelled()` is false there, so the gate still runs and the check below
     # still refuses to pass a job that did not finish.
     if: ${{ !cancelled() }}
-    needs: [validate, compatibility]
+    needs: [validate, compatibility, supply-chain]
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -135,11 +150,13 @@ jobs:
         env:
           VALIDATE_RESULT: ${{ needs.validate.result }}
           COMPATIBILITY_RESULT: ${{ needs.compatibility.result }}
+          SUPPLY_CHAIN_RESULT: ${{ needs.supply-chain.result }}
         run: |
           echo "Validate:      $VALIDATE_RESULT"
           echo "Compatibility: $COMPATIBILITY_RESULT"
+          echo "Supply chain:  $SUPPLY_CHAIN_RESULT"
           status=0
-          for pair in "Validate:$VALIDATE_RESULT" "Compatibility:$COMPATIBILITY_RESULT"; do
+          for pair in "Validate:$VALIDATE_RESULT" "Compatibility:$COMPATIBILITY_RESULT" "Supply chain:$SUPPLY_CHAIN_RESULT"; do
             name="${pair%%:*}"
             result="${pair#*:}"
             [ "$result" = "success" ] && continue
