@@ -11,6 +11,17 @@ updates:
     groups:
       npm:
         patterns: ["*"]
+    ignore:
+      # jsdom 30 and jest-dom 7 both require Node >=22, which is outside the
+      # supported Node 20.19+/22.12+ matrix -- jsdom 30 fails at runtime on
+      # Node 20, not merely with EBADENGINE. See the closed PR #28. Lift these
+      # only as part of a deliberate drop-Node-20 change that also updates
+      # `engines.node`, the README, docs/*_READINESS.md, and the CI matrix.
+      # Patch and minor updates on the 29.x / 6.x lines still flow.
+      - dependency-name: jsdom
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@testing-library/jest-dom"
+        update-types: ["version-update:semver-major"]
   - package-ecosystem: npm
     directory: /examples/basic-storybook
     schedule:
