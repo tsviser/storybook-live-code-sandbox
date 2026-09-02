@@ -4,11 +4,11 @@
   "description": "Preview-iframe Storybook live composition sandbox built with CodeMirror and react-live.",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/tsviser/storybook-live-code-sandbox.git"
+    "url": "git+https://github.com/crossroads-hq/storybook-live-code-sandbox.git"
   },
-  "homepage": "https://github.com/tsviser/storybook-live-code-sandbox#readme",
+  "homepage": "https://github.com/crossroads-hq/storybook-live-code-sandbox#readme",
   "bugs": {
-    "url": "https://github.com/tsviser/storybook-live-code-sandbox/issues"
+    "url": "https://github.com/crossroads-hq/storybook-live-code-sandbox/issues"
   },
   "type": "module",
   "main": "./dist/index.js",

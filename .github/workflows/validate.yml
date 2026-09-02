@@ -4,6 +4,10 @@ on:
   pull_request:
   push:
     branches: [main]
+  # Merge-queue entries. Without this trigger a queued PR waits for the
+  # required PR Validation check that never starts, and times out of the
+  # queue. A queue entry runs the same suite as a push.
+  merge_group:
 
 permissions:
   contents: read
@@ -30,7 +34,11 @@ jobs:
       - name: Check repository consistency
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
-        run: node scripts/check-consistency.mjs --base "$BASE_SHA"
+        # ${BASE_SHA:+...}: a merge_group event carries neither field, and the
+        # script rejects an empty --base. Omitting the flag falls back to its
+        # origin/main default -- the right base for a queue entry, which is
+        # main plus the queued PRs ahead of this one.
+        run: node scripts/check-consistency.mjs ${BASE_SHA:+--base "$BASE_SHA"}
 
       - name: Select deterministic install npm
         run: npm install --global npm@${INSTALL_NPM_VERSION} --ignore-scripts --no-audit --no-fund
@@ -115,7 +123,7 @@ jobs:
     # OSV scan, secret scan, npm audit -- from the control plane. Reusable
     # rather than composite because none of these job names are load-bearing;
     # only the aggregate gate's name is.
-    uses: tsviser/crossroads-ci/.github/workflows/_supply-chain.yml@20ad5f774678414452201695c5f27017fa1f94f1 # main
+    uses: crossroads-hq/crossroads-ci/.github/workflows/_supply-chain.yml@b6d6ff2d2b709a42fb174c21f80549a95ddb1d56 # main
     permissions:
       contents: read
     with:
@@ -136,7 +144,7 @@ jobs:
     # reads job results, not the repository.
     steps:
       - name: Check required results
-        uses: tsviser/crossroads-ci/actions/gate@e006da28fba6e9a456c62acb3d7c036078b07473 # main
+        uses: crossroads-hq/crossroads-ci/actions/gate@b6d6ff2d2b709a42fb174c21f80549a95ddb1d56 # main
         with:
           results: |
             {
