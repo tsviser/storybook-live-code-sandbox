@@ -367,6 +367,37 @@ describe("LiveCodeSandboxProvider", () => {
     ).toBe("<Card />"));
   });
 
+  it("reports a repeated runtime error after the preview recovers", async () => {
+    const user = userEvent.setup();
+    render(
+      <LiveCodeSandboxProvider
+        initialCode="<Card />"
+        registry={registry}
+        scope={{ Broken, Card }}
+        storageKey="runtime-repeat-error"
+      />
+    );
+
+    const preview = screen.getByLabelText("Composition preview");
+    await waitFor(() => expect(preview).toHaveTextContent("Card"));
+
+    const sync = (code: string) => act(() => {
+      window.dispatchEvent(new CustomEvent("live-code-sandbox:runtime-repeat-error", {
+        detail: createDefaultStorage(code),
+      }));
+    });
+
+    sync("<Broken />");
+    expect(await screen.findByText(/Preview could not render:.*Broken preview/)).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Dismiss notification" }));
+    sync("<Card />");
+    await waitFor(() => expect(preview).toHaveTextContent("Card"));
+
+    sync("<Broken />");
+    expect(await screen.findByText(/Preview could not render:.*Broken preview/)).toBeInTheDocument();
+  });
+
   it("does not replace the last good preview when draft JSX is invalid", async () => {
     const user = userEvent.setup();
     render(
