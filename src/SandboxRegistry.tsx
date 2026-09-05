@@ -177,7 +177,7 @@ export function SandboxRegistry({
             value={filter}
           />
           <div className="sb-live-code-sandbox__categoryFilters" aria-label="Component groups">
-            <SandboxChip label={<>All <span>{visualRegistry.length}</span></>} onClick={() => onCategoryChange(activeCategory ? "" : activeCategory)} pressed={!activeCategory} ui={ui} />
+            <SandboxChip label={<>All <span>{visualRegistry.length}</span></>} onClick={() => onCategoryChange("")} pressed={!activeCategory} ui={ui} />
             {categoryModel.categories.map((category) => (
               <SandboxChip
                 key={category}

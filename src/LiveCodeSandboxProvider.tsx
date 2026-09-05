@@ -45,7 +45,6 @@ type Notice = {
   tone: "status" | "warning";
 };
 
-type PendingInsertion = { cursorOffset: number } | null;
 type PendingRun = {
   code: string;
   id: number;
@@ -58,7 +57,11 @@ function RuntimeErrorReporter({ onError }: { onError: (message: string) => void 
   const { error } = useContext(LiveContext);
   const lastErrorRef = useRef<string | undefined>(undefined);
   useEffect(() => {
-    if (!error || error === lastErrorRef.current) return;
+    if (!error) {
+      lastErrorRef.current = undefined;
+      return;
+    }
+    if (error === lastErrorRef.current) return;
     lastErrorRef.current = error;
     onError(error);
   }, [error, onError]);
@@ -160,7 +163,7 @@ export function LiveCodeSandboxProvider({
   const editorViewRef = useRef<EditorView | null>(null);
   const stateRef = useRef(state);
   const typingDirtyRef = useRef(false);
-  const pendingInsertionRef = useRef<PendingInsertion>(null);
+  const pendingInsertionRef = useRef(false);
   const checkpointListRef = useRef<HTMLDivElement | null>(null);
   const resetTriggerRef = useRef<HTMLButtonElement | null>(null);
   const settingsTriggerRef = useRef<HTMLButtonElement | null>(null);
@@ -194,7 +197,7 @@ export function LiveCodeSandboxProvider({
     setResetVersion((value) => value + 1);
     setActiveCheckpointId(null);
     typingDirtyRef.current = false;
-    pendingInsertionRef.current = null;
+    pendingInsertionRef.current = false;
     if (result.outcome === "invalid") {
       setNotice({ message: "Saved sandbox state was invalid and was not loaded.", tone: "warning" });
     } else if (result.outcome === "unavailable") {
@@ -238,7 +241,7 @@ export function LiveCodeSandboxProvider({
       setResetVersion((value) => value + 1);
       setActiveCheckpointId(null);
       typingDirtyRef.current = false;
-      pendingInsertionRef.current = null;
+      pendingInsertionRef.current = false;
     };
     const syncPayload = (payload: unknown) => {
       const next = parseSandboxStoragePayload(payload, checkpointInterval, historyLimit);
@@ -358,7 +361,7 @@ export function LiveCodeSandboxProvider({
         };
       }
       if (changeKind === "programmatic" && pendingInsertionRef.current) {
-        pendingInsertionRef.current = null;
+        pendingInsertionRef.current = false;
         const count = current.insertionActionCount + 1;
         const reached = current.checkpointInterval > 0 && count >= current.checkpointInterval;
         return {
@@ -393,7 +396,7 @@ export function LiveCodeSandboxProvider({
     const to = selection?.to ?? current.cursor;
     const inserted = insertSnippet(current.code, text, { from, to });
     const cursor = Math.min(from, to) + cursorOffset;
-    pendingInsertionRef.current = { cursorOffset };
+    pendingInsertionRef.current = true;
     if (view) {
       view.dispatch({ changes: { from, to, insert: text }, selection: EditorSelection.cursor(cursor), annotations: isolateHistory.of("full") });
       view.focus();
@@ -427,7 +430,7 @@ export function LiveCodeSandboxProvider({
     }
     setSelectedItem(item);
     setActiveRegistryTab("props");
-    pendingInsertionRef.current = { cursorOffset: insertion.cursor };
+    pendingInsertionRef.current = true;
     if (view) {
       view.dispatch({
         changes: { from: 0, to: view.state.doc.length, insert: insertion.code },
@@ -449,7 +452,7 @@ export function LiveCodeSandboxProvider({
     setPendingRun(null);
     setState((current) => createDefaultStorage(initialCode, current.checkpointInterval, current.historyLimit));
     typingDirtyRef.current = false;
-    pendingInsertionRef.current = null;
+    pendingInsertionRef.current = false;
     setSelectedItem(null);
     setActiveRegistryTab("components");
     setActiveWorkspaceTab("components");
