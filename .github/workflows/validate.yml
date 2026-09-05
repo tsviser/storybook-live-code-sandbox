@@ -14,6 +14,7 @@ permissions:
 
 env:
   INSTALL_NPM_VERSION: 10.9.4
+  RESOLVER_NPM_VERSION: 11.6.0
 
 jobs:
   validate:
@@ -104,6 +105,18 @@ jobs:
 
       - name: Verify authoritative lockfiles
         run: git diff --exit-code -- package-lock.json examples/basic-storybook/package-lock.json
+
+      # The React pin below is an overlay install, and npm 10.9.4 crashes
+      # building its ideal tree: "Cannot read properties of null (reading
+      # 'edgesOut')" out of arborist's peer-set resolution. The crash arrived
+      # without a repository change -- 9967af9 passed on 2026-09-02 and the
+      # same commit fails on re-run -- and it is deterministic, so both
+      # matrix legs now resolve the pin under the npm 11 line the publish
+      # workflow already uses. The lockfile-bearing steps above keep running
+      # under INSTALL_NPM_VERSION, so the authoritative lockfiles are still
+      # verified by the install npm.
+      - name: Select resolver npm for the React pin
+        run: npm install --global npm@${RESOLVER_NPM_VERSION} --ignore-scripts --no-audit --no-fund
 
       - name: Select React compatibility version
         run: |
